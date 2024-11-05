@@ -19,5 +19,6 @@ func main() {
 	for i := range logs {
 		seeds = append(seeds, logs[i].Seed)
 	}
+	
 	log.Println(seeds)
 }
