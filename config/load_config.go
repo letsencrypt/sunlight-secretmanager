@@ -1,11 +1,9 @@
 package config
 
 import (
-	//"errors"
 	"fmt"
 	"os"
 
-	//"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -156,33 +154,15 @@ type LogConfig struct {
 	NotAfterLimit string
 }
 
-type homepageLog struct {
-	// Fields from LogConfig, we don't embed the whole struct to avoid
-	// accidentally exposing sensitive fields.
-	Name          string
-	NotAfterStart string
-	NotAfterLimit string
-	HTTPPrefix    string
-	PoolSize      int
-
-	// ID is the base64 encoded SHA-256 of the public key.
-	ID string
-
-	// PublicKey is the PEM encoded SubjectPublicKeyInfo.
-	PublicKey string
-}
-
-// exported for use in main.go
-func Load_config_from_yaml(configFlag *string) Config {
+// Exported for use in main.go.
+func LoadConfigFromYaml(configFlag *string) Config {
 	yml, err := os.ReadFile(*configFlag)
 	if err != nil {
 		fmt.Errorf("failed to read config file, err: [%w]", err)
-		//errors.Wrap(err, "failed to read config file")
 	}
 	c := &Config{}
 	if err := yaml.Unmarshal(yml, c); err != nil {
 		fmt.Errorf("failed to parse config file, err: [%w]", err)
-		//errors.Wrap(err, "failed to parse config file")
-	}
+	} 
 	return *c
 }
