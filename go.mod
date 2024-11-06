@@ -1,4 +1,4 @@
-module github.com/letsencrypt/gorepotemplate
+module github.com/letsencrypt/sunlight-secretmanager
 
 go 1.23
 

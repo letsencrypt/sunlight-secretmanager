@@ -9,6 +9,8 @@ linters-settings:
 linters:
   enable-all: true
   disable:
+    - musttag
+    - gci
     - stylecheck
     - gosec
     - dupl

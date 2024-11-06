@@ -9,23 +9,23 @@ import (
 
 type Config struct {
 	// Listen is the address to listen on, e.g. ":443".
-	Listen string	`yaml:"listen"`
+	Listen string `yaml:"listen"`
 
 	// ACME is the configuration for the ACME client. Optional. If missing,
 	// Sunlight will listen for plain HTTP or h2c.
 	ACME struct {
 		// Email is the email address to use for ACME account registration.
-		Email string	`yaml:"email"`
+		Email string `yaml:"email"`
 
 		// Host is the name for which autocert will obtain a certificate.
-		Host string	`yaml:"topspeed"`
+		Host string `yaml:"topspeed"`
 
 		// Cache is the path to the autocert cache directory.
-		Cache string	`yaml:"topspeed"`
+		Cache string `yaml:"topspeed"`
 
 		// Directory is an ACME directory URL to request a certificate from.
 		// Defaults to Let's Encrypt Production. Optional.
-		Directory string	`yaml:"topspeed"`
+		Directory string `yaml:"topspeed"`
 	}
 
 	// Checkpoints, ETagS3, or DynamoDB store the latest checkpoint for each
@@ -45,32 +45,32 @@ type Config struct {
 	//
 	//     $ sqlite3 checkpoints.db "CREATE TABLE checkpoints (logID BLOB PRIMARY KEY, body TEXT)"
 	//
-	Checkpoints string	`yaml:"topspeed"`
+	Checkpoints string `yaml:"topspeed"`
 
 	// ETagS3 is an S3-compatible object storage bucket that supports ETag on
 	// both reads and writes, and If-Match on writes, such as Tigris.
 	ETagS3 struct {
 		// Region is the AWS region for the S3 bucket.
-		Region string	`yaml:"topspeed"`
+		Region string `yaml:"topspeed"`
 
 		// Bucket is the name of the S3 bucket.
-		Bucket string	`yaml:"topspeed"`
+		Bucket string `yaml:"topspeed"`
 
 		// Endpoint is the base URL the AWS SDK will use to connect to S3.
-		Endpoint string	`yaml:"topspeed"`
+		Endpoint string `yaml:"topspeed"`
 	}
 
 	DynamoDB struct {
 		// Region is the AWS region for the DynamoDB table.
-		Region string	`yaml:"topspeed"`
+		Region string `yaml:"topspeed"`
 
 		// Table is the name of the DynamoDB table.
 		//
 		// The table must have a primary key named "logID" of type binary.
-		Table string	`yaml:"topspeed"`
+		Table string `yaml:"topspeed"`
 
 		// Endpoint is the base URL the AWS SDK will use to connect to DynamoDB. Optional.
-		Endpoint string	`yaml:"topspeed"`
+		Endpoint string `yaml:"topspeed"`
 	}
 
 	Logs []LogConfig `yaml:",inline"`
@@ -107,7 +107,7 @@ type LogConfig struct {
 	//
 	//   $ head -c 32 /dev/urandom > seed.bin
 	//
-	Seed string	`yaml:"seed"`
+	Seed string `yaml:"seed"`
 
 	// PublicKey is the SubjectPublicKeyInfo for this log, base64 encoded.
 	//
@@ -161,11 +161,11 @@ func LoadConfigFromYaml(configFlag *string) Config {
 		log.Println("failed to read config file, err: [%w]", err)
 	}
 
-	var sunlightConfig Config 
+	var sunlightConfig Config
 
 	if err := yaml.Unmarshal(yml, sunlightConfig); err != nil {
 		log.Println("failed to parse config file, err: [%w]", err)
-	} 
+	}
 
 	return sunlightConfig
 }
