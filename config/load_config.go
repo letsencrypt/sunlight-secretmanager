@@ -155,7 +155,7 @@ type LogConfig struct {
 }
 
 // Exported for use in main.go.
-func LoadConfigFromYaml(configFlag *string) Config {
+func LoadConfigFromYaml(configFlag *string) (map[string]string, error) {
 	yml, err := os.ReadFile(*configFlag)
 	if err != nil {
 		log.Println("failed to read config file, err: [%w]", err)
@@ -165,7 +165,15 @@ func LoadConfigFromYaml(configFlag *string) Config {
 
 	if err := yaml.Unmarshal(yml, &sunlightConfig); err != nil {
 		log.Println("failed to parse config file, err: [%w]", err)
+		return nil, err
 	}
 
-	return sunlightConfig
+	logs := sunlightConfig.Logs
+	nameSeedMap := make(map[string]string)
+
+	for i := range logs {
+		nameSeedMap[logs[i].Name] = logs[i].Seed
+	}
+
+	return nameSeedMap, nil
 }
