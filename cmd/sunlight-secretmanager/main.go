@@ -12,7 +12,10 @@ func main() {
 	fs := flag.NewFlagSet("sunlight", flag.ExitOnError)
 	configFlag := fs.String("config", "foo", "Path to YAML config file")
 
-	fs.Parse(os.Args[1:])
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		log.Println("Error parsing flags", err)
+		os.Exit(1)
+	}
 
 	c, err := config.LoadConfigFromYaml(configFlag)
 	log.Println(c)
