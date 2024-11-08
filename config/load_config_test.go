@@ -11,8 +11,7 @@ func TestLoadConfigNoFile(t *testing.T) {
 	t.Parallel()
 
 	testFile := ""
-	testConfig := &testFile
-	got, err := config.LoadConfigFromYaml(testConfig)
+	got, err := config.LoadConfigFromYaml(testFile)
 
 	if got != nil || err == nil {
 		t.Errorf("got %q and error %q, wanted error and nil error", got, err)
@@ -23,8 +22,7 @@ func TestLoadConfigCorrect(t *testing.T) {
 	t.Parallel()
 
 	testFile := "../cmd/sunlight-secretmanager/sunlight.yaml"
-	testConfig := &testFile
-	got, err := config.LoadConfigFromYaml(testConfig)
+	got, err := config.LoadConfigFromYaml(testFile)
 	want := map[string]string{
 		"rome.ct.filippo.io/2024h2": "/etc/sunlight/rome2024h2.key",
 		"rome.ct.filippo.io/2025h1": "/etc/sunlight/rome2025h1.key",
