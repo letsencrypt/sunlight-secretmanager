@@ -17,7 +17,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	c, err := config.LoadConfigFromYaml(configFlag)
+	c, err := config.LoadConfigFromYaml(*configFlag)
 	log.Println(c)
 	log.Println(err)
 }
