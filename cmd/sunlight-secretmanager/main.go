@@ -18,6 +18,9 @@ func main() {
 	}
 
 	c, err := config.LoadConfigFromYaml(*configFlag)
-	log.Println(c)
-	log.Println(err)
+	if err != nil {
+		log.Printf("failed to read config file: [%v], err: [%v]", configFlag, err)
+	} else {
+		log.Printf("seeds: %v", c)
+	}
 }

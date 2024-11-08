@@ -158,16 +158,12 @@ type LogConfig struct {
 func LoadConfigFromYaml(configFile string) (map[string]string, error) {
 	yml, err := os.ReadFile(configFile)
 	if err != nil {
-		log.Printf("failed to read config file: [%v], err: [%v]", configFile, err)
-
 		return nil, err
 	}
 
 	var sunlightConfig Config
 
 	if err := yaml.Unmarshal(yml, &sunlightConfig); err != nil {
-		log.Println("failed to parse config file, err: [%w]", err)
-
 		return nil, err
 	}
 
