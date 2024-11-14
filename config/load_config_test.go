@@ -21,7 +21,7 @@ func TestLoadConfigNoFile(t *testing.T) {
 func TestLoadConfigCorrect(t *testing.T) {
 	t.Parallel()
 
-	testFile := "../cmd/sunlight-secretmanager/sunlight.yaml"
+	testFile := "sunlight.yaml"
 	got, err := config.LoadConfigFromYaml(testFile)
 	want := map[string]string{
 		"rome.ct.filippo.io/2024h2": "/etc/sunlight/rome2024h2.key",

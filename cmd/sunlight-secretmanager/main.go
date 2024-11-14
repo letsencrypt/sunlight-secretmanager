@@ -10,7 +10,7 @@ import (
 
 func main() {
 	fs := flag.NewFlagSet("sunlight", flag.ExitOnError)
-	configFlag := fs.String("config", "foo", "Path to YAML config file")
+	configFlag := fs.String("config", "", "Path to YAML config file")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		log.Println("Error parsing flags", err)
@@ -19,7 +19,7 @@ func main() {
 
 	c, err := config.LoadConfigFromYaml(*configFlag)
 	if err != nil {
-		log.Printf("failed to read config file: [%v], err: [%v]", configFlag, err)
+		log.Printf("failed to read or parse config file: [%v], err: [%v]", configFlag, err)
 	} else {
 		log.Printf("seeds: %v", c)
 	}
