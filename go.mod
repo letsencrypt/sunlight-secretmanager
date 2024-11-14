@@ -1,3 +1,5 @@
-module github.com/letsencrypt/gorepotemplate
+module github.com/letsencrypt/sunlight-secretmanager
 
 go 1.23
+
+require gopkg.in/yaml.v3 v3.0.1
