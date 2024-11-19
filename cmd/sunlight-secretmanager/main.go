@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/letsencrypt/sunlight-secretmanager/config"
+//	"github.com/aws/aws-sdk-go-v2/config" // package config
+//	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
 func main() {
@@ -23,4 +25,16 @@ func main() {
 	} else {
 		log.Printf("seeds: %v", c)
 	}
+
+	actualSeeds := map[string]string{"2025h1b": "radiantlog-twig.ct.letsencrypt.org-2025h1b.key", "2025h2b": "radiantlog-twig.ct.letsencrypt.org-2025h2b.key"}
+	//temp := "radiantlog-twig.ct.letsencrypt.org-2025h1b.key"
+	returnedKeys, err := config.LoadAWSConfig(actualSeeds)
+	if err != nil {
+		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
+	} else {
+		for key := range returnedKeys {
+			log.Printf(returnedKeys[key])
+		}
+	}
+
 }
