@@ -24,8 +24,8 @@ func main() {
 		log.Printf("seeds: %v", c)
 	}
 
-	actualSeeds := map[string]string{"2025h1b": "radiantlog-twig.ct.letsencrypt.org-2025h1b.key", "2025h2b": "radiantlog-twig.ct.letsencrypt.org-2025h2b.key"}
-	returnedKeys, err := config.LoadAWSConfig(actualSeeds)
+	//actualSeeds := map[string]string{"2025h1b": "radiantlog-twig.ct.letsencrypt.org-2025h1b.key", "2025h2b": "radiantlog-twig.ct.letsencrypt.org-2025h2b.key"}
+	returnedKeys, err := config.LoadAWSConfig(c)
 
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)

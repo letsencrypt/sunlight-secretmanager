@@ -6,26 +6,13 @@ acme:
 checkpoints: /var/db/sunlight/checkpoints.db
 
 logs:
-  - name: rome.ct.filippo.io/2024h2
-    shortname: rome2024h2
-    inception: 2024-08-07
-    httpprefix: /2024h2
-    roots: /etc/sunlight/roots.pem
-    seed: /etc/sunlight/rome2024h2.key
-    cache: /var/db/sunlight/rome2024h2.db
-    poolsize: 750
-    s3region: auto
-    s3bucket: rome2024h2
-    s3endpoint: https://fly.storage.tigris.dev
-    notafterstart: 2024-07-01T00:00:00Z
-    notafterlimit: 2025-01-01T00:00:00Z
 
   - name: rome.ct.filippo.io/2025h1
-    shortname: rome2025h1
+    shortname: 2025h1b
     inception: 2024-08-07
     httpprefix: /2025h1
     roots: /etc/sunlight/roots.pem
-    seed: /etc/sunlight/rome2025h1.key
+    seed: radiantlog-twig.ct.letsencrypt.org-2025h1b.key
     cache: /var/db/sunlight/rome2025h1.db
     poolsize: 750
     s3region: auto
@@ -35,11 +22,11 @@ logs:
     notafterlimit: 2025-07-01T00:00:00Z
 
   - name: rome.ct.filippo.io/2025h2
-    shortname: rome2025h2
+    shortname: 2025h2b
     inception: 2024-08-07
     httpprefix: /2025h2
     roots: /etc/sunlight/roots.pem
-    seed: /etc/sunlight/rome2025h2.key
+    seed: radiantlog-twig.ct.letsencrypt.org-2025h2b.key
     cache: /var/db/sunlight/rome2025h2.db
     poolsize: 750
     s3region: auto
