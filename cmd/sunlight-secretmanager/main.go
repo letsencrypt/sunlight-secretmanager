@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"os"
 
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/letsencrypt/sunlight-secretmanager/config"
 )
 
@@ -24,8 +26,16 @@ func main() {
 		log.Printf("seeds: %v", c)
 	}
 
-	//actualSeeds := map[string]string{"2025h1b": "radiantlog-twig.ct.letsencrypt.org-2025h1b.key", "2025h2b": "radiantlog-twig.ct.letsencrypt.org-2025h2b.key"}
-	returnedKeys, err := config.LoadAWSConfig(c)
+	// Uses Config Profile to initialize AWS SDK configuration.
+	// Calls FetchSecrets and passes it configured AWS Secrets Manager client.
+
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithSharedConfigProfile(os.Getenv("AWS_PROFILE")))
+
+	if err != nil {
+		log.Fatalf("unable to load AWS config: %v", err)
+	}
+
+	returnedKeys, err := config.FetchSecrets(c, cfg)
 
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)

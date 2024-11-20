@@ -3,11 +3,9 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"gopkg.in/yaml.v3"
 )
@@ -65,23 +63,12 @@ type SecretsManagerAPI interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 }
 
-// Uses Config Profile to initialize AWS SDK configuration.
-// Calls FetchSecrets and passes it configured AWS Secrets Manager client.
-func LoadAWSConfig(seeds map[string]string) ([]string, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile("AdministratorAccess-654654394563"))
-	if err != nil {
-		log.Fatalf("unable to load AWS config: %v", err)
-	}
-
-	svc := secretsmanager.NewFromConfig(cfg)
-
-	return FetchSecrets(seeds, svc)
-}
-
 // Retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
 // Returns list of successfully loadeded keys or error.
-func FetchSecrets(seeds map[string]string, api SecretsManagerAPI) ([]string, error) {
+func FetchSecrets(seeds map[string]string, cfg aws.Config) ([]string, error) {
 	returnedKeys := []string{}
+
+	api := secretsmanager.NewFromConfig(cfg)
 
 	for _, seedValue := range seeds {
 		input := &secretsmanager.GetSecretValueInput{
