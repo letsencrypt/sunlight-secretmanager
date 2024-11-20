@@ -3,12 +3,14 @@ package config_test
 import (
 	"context"
 	"errors"
+	"log"
 	"reflect"
-	"strconv"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/smithy-go/middleware"
 	"github.com/letsencrypt/sunlight-secretmanager/config"
 )
 
@@ -39,198 +41,126 @@ func TestLoadConfigCorrect(t *testing.T) {
 	}
 }
 
+// Represent error cases.
+var (
+	errSecretIDNil    = errors.New("SecretId cannot be nil")
+	errSecretNotFound = errors.New("secret not found")
+)
+
+// MockSecretsManagerAPI type mocks output and error responses returned from AWS Secrets Manager SDK.
 type mockSecretsManagerAPI func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 
+// Implements GetSecretValue function from Secret Manager for mock.
 func (m mockSecretsManagerAPI) GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
 	return m(ctx, params, optFns...)
 }
 
-/*
-func TestLoadSecrets_AllSecretsFound(t *testing.T) {
-	client := mockSecretsManagerAPI(func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
-		 if params.SecretId == nil {
-			  t.Fatal("expect SecretId to not be nil")
-		 }
-		 // Simulate successful retrieval for SECRET_1 and SECRET_2
-		 if *params.SecretId == "SECRET_1" || *params.SecretId == "SECRET_2" {
-			  return &secretsmanager.GetSecretValueOutput{Name: aws.String(*params.SecretId)}, nil
-		 }
-		 return nil, errors.New("secret not found")
-	})
+// Returns mock implementation of Secrets Manager SDK.
+// Simulates fetching secrets based on provided seeds.
+func newMockSecretsManagerAPI(seeds map[string]string) mockSecretsManagerAPI {
+	return func(_ context.Context, params *secretsmanager.GetSecretValueInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
+		if params.SecretId == nil {
+			return nil, errSecretIDNil
+		}
 
-	seeds := map[string]string{
-		 "KEY1": "SECRET_1",
-		 "KEY2": "SECRET_2",
-	}
+		secretID := *params.SecretId
+		if val, ok := seeds[secretID]; ok {
+			metadata := middleware.Metadata{}
+			metadata.Set("mock", "true")
 
-	expectedKeys := []string{"KEY1", "KEY2"}
+			return &secretsmanager.GetSecretValueOutput{
+				Name:           aws.String(secretID),
+				SecretString:   aws.String(val),
+				SecretBinary:   nil,
+				ARN:            aws.String("arn:aws:secretsmanager:region:account-id:secret:" + secretID),
+				VersionId:      aws.String("version-id"),
+				VersionStages:  []string{"AWSCURRENT"},
+				CreatedDate:    aws.Time(time.Now()),
+				ResultMetadata: metadata,
+			}, nil
+		}
 
-	returnedKeys, err := config.LoadSecrets(seeds, client)
-	if err != nil {
-		 t.Fatalf("unexpected error: %v", err)
-	}
+		log.Printf("Failed to retrieve secret %s: %v", secretID, errSecretNotFound)
 
-	if len(expectedKeys) != len(returnedKeys) {
-		 t.Fatalf("expected %v keys, got %v keys", len(expectedKeys), len(returnedKeys))
-	}
-
-	for _, key := range expectedKeys {
-		 found := false
-		 for _, returnedKey := range returnedKeys {
-			  if key == returnedKey {
-					found = true
-					break
-			  }
-		 }
-		 if !found {
-			  t.Errorf("expected key %s not found in returned keys", key)
-		 }
+		return nil, errSecretNotFound
 	}
 }
 
+// Tests the FetchSecrets tests FetchSecrets function by using mock implementations of Secrets Manager SDK.
+// Verifies that correct secrets are fetched or appropriate errors are returned.
+func TestFetchSecrets(t *testing.T) {
+	t.Parallel()
 
-func TestLoadSecrets_SomeSecretsFound(t *testing.T) {
-	client := mockSecretsManagerAPI(func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
-		 if params.SecretId == nil {
-			  t.Fatal("expect SecretId to not be nil")
-		 }
-		 // Simulate successful retrieval for SECRET_1 only
-		 if *params.SecretId == "SECRET_1" {
-			  return &secretsmanager.GetSecretValueOutput{Name: aws.String("SECRET_1")}, nil
-		 }
-		 return nil, errors.New("secret not found")
-	})
-
-	seeds := map[string]string{
-		 "KEY1": "SECRET_1",
-		 "KEY2": "SECRET_2",
-	}
-
-	expectedKeys := []string{"KEY1"}
-
-	returnedKeys, err := config.LoadSecrets(seeds, client)
-	if err == nil {
-		 t.Fatal("expected error, got nil")
-	}
-
-	if len(expectedKeys) != len(returnedKeys) {
-		 t.Fatalf("expected %v keys, got %v keys", len(expectedKeys), len(returnedKeys))
-	}
-
-	for _, key := range expectedKeys {
-		 found := false
-		 for _, returnedKey := range returnedKeys {
-			  if key == returnedKey {
-					found = true
-					break
-			  }
-		 }
-		 if !found {
-			  t.Errorf("expected key %s not found in returned keys", key)
-		 }
-	}
-}
-	
-
-func TestLoadSecrets_NoSecretsFound(t *testing.T) {
-	client := mockSecretsManagerAPI(func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
-		 return nil, errors.New("secret not found")
-	})
-
-	seeds := map[string]string{
-		 "KEY1": "SECRET_1",
-		 "KEY2": "SECRET_2",
-	}
-
-	returnedKeys, err := config.LoadSecrets(seeds, client)
-	if err == nil {
-		 t.Fatal("expected error, got nil")
-	}
-
-	if len(returnedKeys) != 0 {
-		 t.Fatalf("expected 0 keys, got %v keys", len(returnedKeys))
-	}
-}
-	*/
-
-
-
-
-func TestLoadSecrets(t *testing.T) {
 	cases := []struct {
-		client func(t *testing.T) config.SecretsManagerAPI
+		name   string
+		client mockSecretsManagerAPI
 		seeds  map[string]string
 		expect []string
 		err    error
 	}{
 		{
-			client: func(t *testing.T) config.SecretsManagerAPI {
-				return mockSecretsManagerAPI(func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
-					t.Helper()
-					if params.SecretId == nil {
-						t.Fatal("expect SecretId to not be nil")
-					}
-					if *params.SecretId == "SECRET_1" {
-						return &secretsmanager.GetSecretValueOutput{Name: aws.String("SECRET_1")}, nil
-					}
-					return nil, errors.New("secret not found")
-				})
-			},
-			seeds: map[string]string{
-				"KEY1": "SECRET_1",
-			},
-			expect: []string{"KEY1"},
+			name:   "secret retrieved",
+			client: newMockSecretsManagerAPI(map[string]string{"SECRET_1": "value1", "SECRET_2": "value2"}),
+			seeds:  map[string]string{"KEY1": "SECRET_1", "KEY2": "SECRET_2"},
+			expect: []string{"SECRET_1", "SECRET_2"},
 			err:    nil,
 		},
 		{
-			client: func(t *testing.T) config.SecretsManagerAPI {
-				return mockSecretsManagerAPI(func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
-					t.Helper()
-					return nil, errors.New("secret not found")
-				})
-			},
-			seeds: map[string]string{
-				"KEY1": "SECRET_1",
-			},
+			name:   "secret not found",
+			client: newMockSecretsManagerAPI(map[string]string{}),
+			seeds:  map[string]string{"KEY1": "SECRET_1"},
 			expect: nil,
-			err:    errors.New("secret not found"),
+			err:    errSecretNotFound,
 		},
 	}
 
-	for i, tt := range cases {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			returnedKeys, err := config.LoadSecrets(tt.seeds, tt.client(t))
-
-			if tt.err != nil {
-				if err == nil || err.Error() != tt.err.Error() {
-					t.Fatalf("expected error %v, got %v", tt.err, err)
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
-			}
-
-			if len(tt.expect) != len(returnedKeys) {
-				t.Fatalf("expected %v keys, got %v keys", len(tt.expect), len(returnedKeys))
-			}
-
-			for _, key := range tt.expect {
-				found := false
-				
-				for _, returnedKey := range returnedKeys {
-					if key == returnedKey {
-						found = true
-						
-						break
-					}
-				}
-
-				if !found {
-					t.Errorf("expected key %s not found in returned keys", key)
-				}
-			}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			runTestFetchSecrets(t, tt.client, tt.seeds, tt.expect, tt.err)
 		})
 	}
 }
-	
+
+// Helper function to TestFetchSecrets.
+// Compares output of FetchSecrets with expected behavior.
+func runTestFetchSecrets(t *testing.T, client mockSecretsManagerAPI, seeds map[string]string, expect []string, expectedErr error) {
+	t.Helper()
+
+	returnedKeys, err := config.FetchSecrets(seeds, client)
+
+	if expectedErr != nil {
+		if err == nil || !errors.Is(err, expectedErr) {
+			log.Printf("Test failed: expected error %v, got %v", expectedErr, err)
+
+			t.Fatalf("expected error %v, got %v", expectedErr, err)
+		}
+	} else {
+		if err != nil {
+			log.Printf("Test failed with unexpected error: %v", err)
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+
+	if len(expect) != len(returnedKeys) {
+		log.Printf("Test failed: expected %v keys, got %v keys", len(expect), len(returnedKeys))
+		t.Fatalf("expected %v keys, got %v keys", len(expect), len(returnedKeys))
+	}
+
+	for _, key := range expect {
+		found := false
+
+		for _, returnedKey := range returnedKeys {
+			if key == returnedKey {
+				found = true
+
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("Test failed: expected key %s not found in returned keys", key)
+			t.Errorf("expected key %s not found in returned keys", key)
+		}
+	}
+}
