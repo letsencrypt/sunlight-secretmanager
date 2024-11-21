@@ -12,7 +12,7 @@ logs:
     inception: 2024-08-07
     httpprefix: /2025h1
     roots: /etc/sunlight/roots.pem
-    seed: radiantlog-twig.ct.letsencrypt.org-2025h1b.key
+    seed: /etc/radiantlog-twig.ct.letsencrypt.org-2025h1b.key
     cache: /var/db/sunlight/rome2025h1.db
     poolsize: 750
     s3region: auto

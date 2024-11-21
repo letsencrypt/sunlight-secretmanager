@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -49,7 +50,7 @@ func LoadConfigFromYaml(configFile string) (map[string]string, error) {
 	nameSeedMap := make(map[string]string)
 
 	for i := range logs {
-		nameSeedMap[logs[i].Name] = logs[i].Seed
+		nameSeedMap[logs[i].Name] = filepath.Base(logs[i].Seed)
 	}
 
 	return nameSeedMap, nil
