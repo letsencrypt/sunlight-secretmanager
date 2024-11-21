@@ -105,15 +105,20 @@ func runTestFetchSecrets(ctx context.Context, t *testing.T, client mockSecretsMa
 
 	if expectedErr != nil {
 		if err == nil || !errors.Is(err, expectedErr) {
-			t.Errorf("expected error %v, got %v", expectedErr, err)
+			log.Printf("Test failed: expected error %v, got %v", expectedErr, err)
+
+			t.Fatalf("expected error %v, got %v", expectedErr, err)
 		}
-	}
-	if err != nil {
-		t.Fatalf("test failed with unexpected error: %v", err)
+	} else {
+		if err != nil {
+			log.Printf("Test failed with unexpected error: %v", err)
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 
 	if len(expect) != len(returnedKeys) {
-		t.Errorf("expected %v keys, got %v keys", len(expect), len(returnedKeys))
+		log.Printf("Test failed: expected %v keys, got %v keys", len(expect), len(returnedKeys))
+		t.Fatalf("expected %v keys, got %v keys", len(expect), len(returnedKeys))
 	}
 
 	for _, key := range expect {
@@ -128,6 +133,7 @@ func runTestFetchSecrets(ctx context.Context, t *testing.T, client mockSecretsMa
 		}
 
 		if !found {
+			log.Printf("Test failed: expected key %s not found in returned keys", key)
 			t.Errorf("expected key %s not found in returned keys", key)
 		}
 	}
