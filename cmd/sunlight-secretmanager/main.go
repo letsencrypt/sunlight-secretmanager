@@ -27,7 +27,7 @@ func main() {
 	log.Printf("seeds: %v", nameSeedMap)
 
 	// Uses Config Profile to initialize AWS SDK configuration.
-	// Calls FetchSecrets and passes it configured AWS Secrets Manager client.
+	// Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
 
 	ctx := context.Background()
 
@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("unable to load AWS config: %v", err)
 	}
 
-	returnedKeys, err := secrets.LoadAWSConfig(ctx, nameSeedMap, cfg)
+	returnedKeys, err := secrets.FetchSecrets(ctx, nameSeedMap, cfg)
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
 	}

@@ -8,22 +8,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
-// AWSSecretsManagerAPI defines the interface for the AWS Secrets Manager operations required by FetchSecrets.
+// AWSSecretsManagerAPI defines the interface for the AWS Secrets Manager operations required by FetchSecretsHelper.
 type AWSSecretsManagerAPI interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 }
 
-// LoadAWSConfig uses Config Profile to initialize AWS SDK configuration.
-// Calls FetchSecrets and passes it configured AWS Secrets Manager client.
-func LoadAWSConfig(ctx context.Context, seeds map[string]string, cfg aws.Config) ([]string, error) {
+// FetchSecrets uses Config Profile to initialize AWS SDK configuration.
+// Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
+func FetchSecrets(ctx context.Context, seeds map[string]string, cfg aws.Config) ([]string, error) {
 	svc := secretsmanager.NewFromConfig(cfg)
 
-	return FetchSecrets(ctx, seeds, svc)
+	return FetchSecretsHelper(ctx, seeds, svc)
 }
 
-// FetchSecrets retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
+// FetchSecretsHelper retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
 // Returns list of successfully loadeded keys or error.
-func FetchSecrets(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) ([]string, error) {
+func FetchSecretsHelper(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) ([]string, error) {
 	returnedKeys := []string{}
 
 	for _, seedValue := range seeds {
