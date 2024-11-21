@@ -7,13 +7,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Struct is from Sunlight github: https://github.com/FiloSottile/sunlight/.
+// Config struct is from Sunlight github: https://github.com/FiloSottile/sunlight/.
 // It contains LogConfigs.
 type Config struct {
 	Logs []LogConfig
 }
 
-// Struct is from Sunlight github: https://github.com/FiloSottile/sunlight/.
+// LogConfig struct is from Sunlight github: https://github.com/FiloSottile/sunlight/.
 // It contains Seeds.
 type LogConfig struct {
 	// Name is the fully qualified log name for the checkpoint origin line, as a

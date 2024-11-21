@@ -13,17 +13,17 @@ type AWSSecretsManagerAPI interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 }
 
-// Uses Config Profile to initialize AWS SDK configuration.
+// LoadAWSConfig uses Config Profile to initialize AWS SDK configuration.
 // Calls FetchSecrets and passes it configured AWS Secrets Manager client.
-func LoadAWSConfig(seeds map[string]string, ctx aws.Config) ([]string, error) {
-	svc := secretsmanager.NewFromConfig(ctx)
+func LoadAWSConfig(ctx context.Context, seeds map[string]string, cfg aws.Config) ([]string, error) {
+	svc := secretsmanager.NewFromConfig(cfg)
 
-	return FetchSecrets(seeds, svc)
+	return FetchSecrets(ctx, seeds, svc)
 }
 
-// Retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
+// FetchSecrets retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
 // Returns list of successfully loadeded keys or error.
-func FetchSecrets(seeds map[string]string, api AWSSecretsManagerAPI) ([]string, error) {
+func FetchSecrets(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) ([]string, error) {
 	returnedKeys := []string{}
 
 	for _, seedValue := range seeds {
@@ -33,7 +33,7 @@ func FetchSecrets(seeds map[string]string, api AWSSecretsManagerAPI) ([]string, 
 			VersionId:    nil,
 		}
 
-		result, err := api.GetSecretValue(context.TODO(), input)
+		result, err := api.GetSecretValue(ctx, input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve secret for %v: %w", *input.SecretId, err)
 		}

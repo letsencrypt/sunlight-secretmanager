@@ -22,14 +22,14 @@ var (
 // MockSecretsManagerAPI type mocks output and error responses returned from AWS Secrets Manager SDK.
 type mockSecretsManagerAPI func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 
-// Implements GetSecretValue function from Secret Manager for mock.
+// GetSecretValue Implements AWS Secret Manager's GetSecretValue for mock.
 func (m mockSecretsManagerAPI) GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
 	return m(ctx, params, optFns...)
 }
 
-// Returns mock implementation of Secrets Manager SDK.
+// newMockSecretManagerAPI returns mock implementation of Secrets Manager SDK.
 // Simulates fetching secrets based on provided seeds.
-func newMockSecretsManagerAPI(seeds map[string]string) mockSecretsManagerAPI {
+func newMockSecretsManagerAPI(_ context.Context, seeds map[string]string) mockSecretsManagerAPI {
 	return func(_ context.Context, params *secretsmanager.GetSecretValueInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
 		if params.SecretId == nil {
 			return nil, errSecretIDNil
@@ -58,10 +58,12 @@ func newMockSecretsManagerAPI(seeds map[string]string) mockSecretsManagerAPI {
 	}
 }
 
-// Tests the FetchSecrets tests FetchSecrets function by using mock implementations of Secrets Manager SDK.
+// TestFetchSecrets tests the FetchSecrets tests FetchSecrets function by using mock implementations of Secrets Manager SDK.
 // Verifies that correct secrets are fetched or appropriate errors are returned.
 func TestFetchSecrets(t *testing.T) {
 	t.Parallel()
+
+	ctx := context.Background()
 
 	cases := []struct {
 		name   string
@@ -72,14 +74,14 @@ func TestFetchSecrets(t *testing.T) {
 	}{
 		{
 			name:   "secret retrieved",
-			client: newMockSecretsManagerAPI(map[string]string{"SECRET_1": "value1", "SECRET_2": "value2"}),
+			client: newMockSecretsManagerAPI(ctx, map[string]string{"SECRET_1": "value1", "SECRET_2": "value2"}),
 			seeds:  map[string]string{"KEY1": "SECRET_1", "KEY2": "SECRET_2"},
 			expect: []string{"SECRET_1", "SECRET_2"},
 			err:    nil,
 		},
 		{
 			name:   "secret not found",
-			client: newMockSecretsManagerAPI(map[string]string{}),
+			client: newMockSecretsManagerAPI(ctx, map[string]string{}),
 			seeds:  map[string]string{"KEY1": "SECRET_1"},
 			expect: nil,
 			err:    errSecretNotFound,
@@ -89,17 +91,17 @@ func TestFetchSecrets(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			runTestFetchSecrets(t, tt.client, tt.seeds, tt.expect, tt.err)
+			runTestFetchSecrets(ctx, t, tt.client, tt.seeds, tt.expect, tt.err)
 		})
 	}
 }
 
-// Helper function to TestFetchSecrets.
+// runTestFetchSecrets is a helper function to TestFetchSecrets.
 // Compares output of FetchSecrets with expected behavior.
-func runTestFetchSecrets(t *testing.T, client mockSecretsManagerAPI, seeds map[string]string, expect []string, expectedErr error) {
+func runTestFetchSecrets(ctx context.Context, t *testing.T, client mockSecretsManagerAPI, seeds map[string]string, expect []string, expectedErr error) {
 	t.Helper()
 
-	returnedKeys, err := secrets.FetchSecrets(seeds, client)
+	returnedKeys, err := secrets.FetchSecrets(ctx, seeds, client)
 
 	if expectedErr != nil {
 		if err == nil || !errors.Is(err, expectedErr) {
