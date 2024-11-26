@@ -7,8 +7,8 @@ import (
 	"os"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	secrets "github.com/letsencrypt/sunlight-secretmanager/aws"
 	"github.com/letsencrypt/sunlight-secretmanager/config"
+	secrets "github.com/letsencrypt/sunlight-secretmanager/secrets"
 )
 
 func main() {

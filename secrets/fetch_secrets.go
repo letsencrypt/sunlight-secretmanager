@@ -18,12 +18,12 @@ type AWSSecretsManagerAPI interface {
 func FetchSecrets(ctx context.Context, seeds map[string]string, cfg aws.Config) (map[string][]byte, error) {
 	svc := secretsmanager.NewFromConfig(cfg)
 
-	return FetchSecretsHelper(ctx, seeds, svc)
+	return fetchSecretsHelper(ctx, seeds, svc)
 }
 
 // FetchSecretsHelper retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
 // Returns list of successfully loadeded keys or error.
-func FetchSecretsHelper(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) (map[string][]byte, error) {
+func fetchSecretsHelper(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) (map[string][]byte, error) {
 	// returnedKeys := []string{}
 	returnedKeys := make(map[string][]byte)
 

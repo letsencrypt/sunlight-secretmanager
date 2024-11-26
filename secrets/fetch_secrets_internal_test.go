@@ -1,4 +1,4 @@
-package secrets_test
+package secrets
 
 import (
 	"bytes"
@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/smithy-go/middleware"
-	secrets "github.com/letsencrypt/sunlight-secretmanager/aws"
 )
 
 // Represent error cases.
@@ -102,7 +101,7 @@ func TestFetchSecretsHelper(t *testing.T) {
 func runTestFetchSecretsHelper(ctx context.Context, t *testing.T, client mockSecretsManagerAPI, seeds map[string]string, expect map[string][]byte, expectedErr error) {
 	t.Helper()
 
-	returnedKeys, err := secrets.FetchSecretsHelper(ctx, seeds, client)
+	returnedKeys, err := fetchSecretsHelper(ctx, seeds, client)
 
 	if expectedErr != nil {
 		if err == nil || !errors.Is(err, expectedErr) {
