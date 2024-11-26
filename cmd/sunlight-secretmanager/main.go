@@ -42,6 +42,6 @@ func main() {
 	}
 
 	for key := range returnedKeys {
-		log.Printf("successfully loaded key %v named %v", key, returnedKeys[key])
+		log.Printf("successfully loaded key %v", key)
 	}
 }

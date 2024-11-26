@@ -15,7 +15,7 @@ type AWSSecretsManagerAPI interface {
 
 // FetchSecrets uses Config Profile to initialize AWS SDK configuration.
 // Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
-func FetchSecrets(ctx context.Context, seeds map[string]string, cfg aws.Config) ([]string, error) {
+func FetchSecrets(ctx context.Context, seeds map[string]string, cfg aws.Config) (map[string][]byte, error) {
 	svc := secretsmanager.NewFromConfig(cfg)
 
 	return FetchSecretsHelper(ctx, seeds, svc)
@@ -23,8 +23,9 @@ func FetchSecrets(ctx context.Context, seeds map[string]string, cfg aws.Config) 
 
 // FetchSecretsHelper retrieves secrets from AWS Secrets Manager given a name-to-seed mapping.
 // Returns list of successfully loadeded keys or error.
-func FetchSecretsHelper(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) ([]string, error) {
-	returnedKeys := []string{}
+func FetchSecretsHelper(ctx context.Context, seeds map[string]string, api AWSSecretsManagerAPI) (map[string][]byte, error) {
+	// returnedKeys := []string{}
+	returnedKeys := make(map[string][]byte)
 
 	for _, seedValue := range seeds {
 		input := &secretsmanager.GetSecretValueInput{
@@ -38,7 +39,12 @@ func FetchSecretsHelper(ctx context.Context, seeds map[string]string, api AWSSec
 			return nil, fmt.Errorf("failed to retrieve secret for %v: %w", *input.SecretId, err)
 		}
 
-		returnedKeys = append(returnedKeys, *result.Name)
+		// Decrypts secret using the associated KMS key.
+		res := *result
+		secretName := res.Name
+		secretValue := res.SecretBinary
+
+		returnedKeys[*secretName] = secretValue
 	}
 
 	return returnedKeys, nil
