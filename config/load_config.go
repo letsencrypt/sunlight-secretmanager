@@ -32,6 +32,31 @@ type LogConfig struct {
 	Seed string
 }
 
+// FileType represents a file with its full path and filename.
+type FileType struct {
+	Fullpath string
+	Filename string
+}
+
+// Global map to store file information.
+var Files = map[string]FileType{}
+
+// AddFile adds a new file to the global Files map.
+func AddFile(name, path string) {
+	Files[name] = FileType{
+		Fullpath: path,
+		Filename: filepath.Base(path),
+	}
+}
+
+func GetFile(name string) (string, string) {
+	file := Files[name]
+	fullpath := file.Fullpath
+	filename := file.Filename
+
+	return fullpath, filename
+}
+
 // LoadConfigFromYaml takes path to a yaml file and returns the seeds in that log file.
 // Exported for use in main.go.
 func LoadConfigFromYaml(configFile string) (map[string]string, error) {
@@ -50,7 +75,10 @@ func LoadConfigFromYaml(configFile string) (map[string]string, error) {
 	nameSeedMap := make(map[string]string)
 
 	for i := range logs {
-		nameSeedMap[logs[i].Name] = filepath.Base(logs[i].Seed)
+		name := logs[i].Name
+		seed := logs[i].Seed
+		AddFile(name, seed)
+		nameSeedMap[logs[i].Name] = filepath.Base(seed)
 	}
 
 	return nameSeedMap, nil
