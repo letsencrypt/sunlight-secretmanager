@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/letsencrypt/sunlight-secretmanager/config"
 )
 
 type AWSSecretsManagerAPI interface {
@@ -24,7 +25,7 @@ func New(cfg aws.Config) *Secrets {
 
 // FetchSecrets uses Config Profile to initialize AWS SDK configuration.
 // Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
-func FetchSecrets(ctx context.Context, seeds map[string]string, cfg aws.Config) (map[string][]byte, error) {
+func FetchSecrets(ctx context.Context, seeds map[string]string, _ map[string]config.FileType, cfg aws.Config) (map[string][]byte, error) {
 	api := New(cfg)
 
 	returnedKeys := make(map[string][]byte)

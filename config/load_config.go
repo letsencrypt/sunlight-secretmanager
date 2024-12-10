@@ -38,48 +38,31 @@ type FileType struct {
 	Filename string
 }
 
-// Global map to store file information.
-var Files = map[string]FileType{}
-
-// AddFile adds a new file to the global Files map.
-func AddFile(name, path string) {
-	Files[name] = FileType{
-		Fullpath: path,
-		Filename: filepath.Base(path),
-	}
-}
-
-func GetFile(name string) (string, string) {
-	file := Files[name]
-	fullpath := file.Fullpath
-	filename := file.Filename
-
-	return fullpath, filename
-}
-
 // LoadConfigFromYaml takes path to a yaml file and returns the seeds in that log file.
 // Exported for use in main.go.
-func LoadConfigFromYaml(configFile string) (map[string]string, error) {
+func LoadConfigFromYaml(configFile string) (map[string]string, map[string]FileType, error) {
 	yml, err := os.ReadFile(configFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file %v: %w", configFile, err)
+		return nil, nil, fmt.Errorf("failed to read config file %v: %w", configFile, err)
 	}
 
 	var sunlightConfig Config
 
 	if err := yaml.Unmarshal(yml, &sunlightConfig); err != nil {
-		return nil, fmt.Errorf("failed to parse config file %v: %w", configFile, err)
+		return nil, nil, fmt.Errorf("failed to parse config file %v: %w", configFile, err)
 	}
 
 	logs := sunlightConfig.Logs
 	nameSeedMap := make(map[string]string)
+	fileNamesMap := make(map[string]FileType)
 
 	for i := range logs {
 		name := logs[i].Name
 		seed := logs[i].Seed
-		AddFile(name, seed)
-		nameSeedMap[logs[i].Name] = filepath.Base(seed)
+		filename := filepath.Base(seed)
+		fileNamesMap[name] = FileType{seed, filename}
+		nameSeedMap[name] = filepath.Base(seed)
 	}
 
-	return nameSeedMap, nil
+	return nameSeedMap, fileNamesMap, nil
 }

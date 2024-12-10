@@ -19,15 +19,12 @@ func main() {
 		log.Fatalf("Error parsing flags: %v", err)
 	}
 
-	nameSeedMap, err := config.LoadConfigFromYaml(*configFlag)
+	nameSeedMap, fileNamesMap, err := config.LoadConfigFromYaml(*configFlag)
 	if err != nil {
 		log.Fatalf("failed to read or parse config file: [%v], err: [%v]", configFlag, err)
 	}
 
 	log.Printf("seeds: %v", nameSeedMap)
-
-	// Uses Config Profile to initialize AWS SDK configuration.
-	// Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
 
 	ctx := context.Background()
 
@@ -36,7 +33,7 @@ func main() {
 		log.Fatalf("unable to load AWS config: %v", err)
 	}
 
-	returnedKeys, err := secrets.FetchSecrets(ctx, nameSeedMap, cfg)
+	returnedKeys, err := secrets.FetchSecrets(ctx, nameSeedMap, fileNamesMap, cfg)
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
 	}
