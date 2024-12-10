@@ -12,6 +12,7 @@ import (
 	"github.com/aws/smithy-go/middleware"
 )
 
+// Represents error cases.
 var (
 	errSecretIDNil    = errors.New("SecretId cannot be nil")
 	errSecretNotFound = errors.New("secret not found")
@@ -20,6 +21,7 @@ var (
 // Mock implementation of AWSSecretsManagerAPI interface.
 type mockSecretsManagerAPI func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 
+// GetSecretValue Implements AWS Secret Manager's GetSecretValue for mock.
 func (m mockSecretsManagerAPI) GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
 	return m(ctx, params, optFns...)
 }

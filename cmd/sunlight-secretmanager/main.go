@@ -33,7 +33,9 @@ func main() {
 		log.Fatalf("unable to load AWS config: %v", err)
 	}
 
-	returnedKeys, err := secrets.FetchSecrets(ctx, nameSeedMap, fileNamesMap, cfg)
+	secret := secrets.New(cfg)
+
+	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap)
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
 	}

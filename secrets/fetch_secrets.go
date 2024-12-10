@@ -9,6 +9,7 @@ import (
 	"github.com/letsencrypt/sunlight-secretmanager/config"
 )
 
+// AWSSecretsManagerAPI defines the interface for the AWS Secrets Manager operations required by FetchSecretsHelper.
 type AWSSecretsManagerAPI interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 }
@@ -25,9 +26,7 @@ func New(cfg aws.Config) *Secrets {
 
 // FetchSecrets uses Config Profile to initialize AWS SDK configuration.
 // Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
-func FetchSecrets(ctx context.Context, seeds map[string]string, _ map[string]config.FileType, cfg aws.Config) (map[string][]byte, error) {
-	api := New(cfg)
-
+func (s *Secrets) FetchSecrets(ctx context.Context, seeds map[string]string, _ map[string]config.FileType) (map[string][]byte, error) {
 	returnedKeys := make(map[string][]byte)
 
 	for _, seedValue := range seeds {
@@ -37,7 +36,7 @@ func FetchSecrets(ctx context.Context, seeds map[string]string, _ map[string]con
 			VersionId:    nil,
 		}
 
-		result, err := api.svc.GetSecretValue(ctx, input)
+		result, err := s.svc.GetSecretValue(ctx, input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve secret for %v: %w", *input.SecretId, err)
 		}
