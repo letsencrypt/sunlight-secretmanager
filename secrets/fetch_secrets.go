@@ -37,7 +37,6 @@ func New(cfg aws.Config) *Secrets {
 // FetchSecrets uses Config Profile to initialize AWS SDK configuration.
 // Calls FetchSecretsHelper and passes it configured AWS Secrets Manager client.
 func (s *Secrets) FetchSecrets(ctx context.Context, seeds map[string]string, fileNamesMap map[string]config.FileType, fsConst Filesystem) (map[string][]byte, error) {
-
 	returnedKeys := make(map[string][]byte)
 
 	for _, seedValue := range seeds {

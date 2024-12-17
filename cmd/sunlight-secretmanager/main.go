@@ -39,7 +39,6 @@ func main() {
 
 	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap, secrets.Filesystem(*fileSystemFlag))
 	if err != nil {
-
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
 	}
 
