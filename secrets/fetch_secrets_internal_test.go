@@ -165,12 +165,11 @@ type MockIsFilesystemFunc func(file *os.File, fs Filesystem) (bool, error)
 // TestWriteToTmpfile defines test cases for the writeToTmpfile function using mock implementation of IsFilesystemFunc.
 func TestWriteToTmpfile(t *testing.T) {
 	testCases := []struct {
-		name           string
-		filename       config.FileType
-		secret         []byte
-		mockCheckFunc  func(file *os.File, fs Filesystem) (bool, error)
-		expectedResult string
-		expectedError  error
+		name          string
+		filename      config.FileType
+		secret        []byte
+		mockCheckFunc func(file *os.File, fs Filesystem) (bool, error)
+		expectedError error
 	}{
 		{
 			name: "Successful",
@@ -182,8 +181,7 @@ func TestWriteToTmpfile(t *testing.T) {
 			mockCheckFunc: func(_ *os.File, _ Filesystem) (bool, error) {
 				return true, nil
 			},
-			expectedResult: "/var/folders/51/yz9jrwbn2b5b2ngnq86dj7dw0000gn/T/TestWriteToTmpfileSuccessful",
-			expectedError:  nil,
+			expectedError: nil,
 		},
 		{
 			name: "Error",
@@ -195,8 +193,7 @@ func TestWriteToTmpfile(t *testing.T) {
 			mockCheckFunc: func(_ *os.File, _ Filesystem) (bool, error) {
 				return false, errFileCheckFailed
 			},
-			expectedResult: "",
-			expectedError:  errInvalidTmpfs,
+			expectedError: errInvalidTmpfs,
 		},
 	}
 
@@ -213,12 +210,11 @@ func TestWriteToTmpfile(t *testing.T) {
 // RunWriteToTmpfileTest is a helper function to TestWriteToTmpfile.
 // It runs tests to verify that if a file is correctly mounted on tmpfs, the secrets is correctly written to the file.
 func runWriteToTmpfileTest(t *testing.T, testcase struct {
-	name           string
-	filename       config.FileType
-	secret         []byte
-	mockCheckFunc  func(file *os.File, fs Filesystem) (bool, error)
-	expectedResult string
-	expectedError  error
+	name          string
+	filename      config.FileType
+	secret        []byte
+	mockCheckFunc func(file *os.File, fs Filesystem) (bool, error)
+	expectedError error
 },
 ) {
 	t.Helper()
