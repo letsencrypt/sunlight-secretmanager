@@ -15,6 +15,8 @@ func main() {
 	fs := flag.NewFlagSet("sunlight", flag.ExitOnError)
 	configFlag := fs.String("config", "", "Path to YAML config file")
 
+	fileSystemFlag := fs.Int64("fs", 0, "OS Filesystem constant. Defaults to Linux")
+
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
 	}
@@ -35,7 +37,7 @@ func main() {
 
 	secret := secrets.New(cfg)
 
-	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap)
+	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap, secrets.Filesystem(*fileSystemFlag))
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
 	}

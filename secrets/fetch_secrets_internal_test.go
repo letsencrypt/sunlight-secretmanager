@@ -4,21 +4,26 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/smithy-go/middleware"
+	"github.com/letsencrypt/sunlight-secretmanager/config"
 )
 
 // Represents error cases.
 var (
-	errSecretIDNil    = errors.New("SecretId cannot be nil")
-	errSecretNotFound = errors.New("secret not found")
+	errSecretIDNil     = errors.New("SecretId cannot be nil")
+	errSecretNotFound  = errors.New("secret not found")
+	errFileCheckFailed = errors.New("filesystem check failed")
 )
 
-// Mock implementation of AWSSecretsManagerAPI interface.
+// mockSecretsManager API is a mock implementation of AWSSecretsManagerAPI interface.
 type mockSecretsManagerAPI func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 
 // GetSecretValue Implements AWS Secret Manager's GetSecretValue for mock.
@@ -150,6 +155,98 @@ func runTestFetchSecrets(
 
 		if !bytes.Equal(expectVal, returnedVal) {
 			t.Errorf("value mismatch for key %s: expected %v, got %v", expectKey, expectVal, returnedVal)
+		}
+	}
+}
+
+// MockIsFilesystemFunc is a mock implementation of isFilesystemFunc.
+type MockIsFilesystemFunc func(file *os.File, fs Filesystem) (bool, error)
+
+// TestWriteToTmpfile defines test cases for the writeToTmpfile function using mock implementation of IsFilesystemFunc.
+func TestWriteToTmpfile(t *testing.T) {
+	testCases := []struct {
+		name           string
+		filename       config.FileType
+		secret         []byte
+		mockCheckFunc  func(file *os.File, fs Filesystem) (bool, error)
+		expectedResult string
+		expectedError  error
+	}{
+		{
+			name: "Successful",
+			filename: config.FileType{
+				Fullpath: "/etc/filename",
+				Filename: "file.key",
+			},
+			secret: []byte{226, 151, 186},
+			mockCheckFunc: func(_ *os.File, _ Filesystem) (bool, error) {
+				return true, nil
+			},
+			expectedResult: "/var/folders/51/yz9jrwbn2b5b2ngnq86dj7dw0000gn/T/TestWriteToTmpfileSuccessful",
+			expectedError:  nil,
+		},
+		{
+			name: "Error",
+			filename: config.FileType{
+				Fullpath: "/etc/filename",
+				Filename: "file.key",
+			},
+			secret: []byte{226, 151, 186},
+			mockCheckFunc: func(_ *os.File, _ Filesystem) (bool, error) {
+				return false, errFileCheckFailed
+			},
+			expectedResult: "",
+			expectedError:  errInvalidTmpfs,
+		},
+	}
+
+	t.Parallel()
+
+	for _, testcase := range testCases {
+		t.Run(testcase.name, func(t *testing.T) {
+			t.Parallel()
+			runWriteToTmpfileTest(t, testcase)
+		})
+	}
+}
+
+// RunWriteToTmpfileTest is a helper function to TestWriteToTmpfile.
+// It runs tests to verify that if a file is correctly mounted on tmpfs, the secrets is correctly written to the file.
+func runWriteToTmpfileTest(t *testing.T, testcase struct {
+	name           string
+	filename       config.FileType
+	secret         []byte
+	mockCheckFunc  func(file *os.File, fs Filesystem) (bool, error)
+	expectedResult string
+	expectedError  error
+},
+) {
+	t.Helper()
+
+	tempDir := t.TempDir()
+
+	testFilename := config.FileType{
+		Fullpath: tempDir,
+		Filename: filepath.Base(tempDir),
+	}
+
+	isFilesystemFunc = testcase.mockCheckFunc
+
+	result, err := writeToTmpfile(testcase.secret, testFilename, Filesystem(0x01021994))
+
+	if !errors.Is(errors.Unwrap(err), errors.Unwrap(testcase.expectedError)) {
+		t.Errorf("expected error %v got %v", testcase.expectedError, err)
+	}
+
+	if result != "" {
+		if !strings.HasPrefix(result, tempDir) {
+			t.Errorf("file not created in expected directory. Got %s, want prefix %s", result, tempDir)
+		}
+
+		if fileContent, readErr := os.ReadFile(result); readErr != nil {
+			t.Errorf("failed to read result file: %v", readErr)
+		} else if !bytes.Equal(fileContent, testcase.secret) {
+			t.Errorf("file content mismatch")
 		}
 	}
 }
