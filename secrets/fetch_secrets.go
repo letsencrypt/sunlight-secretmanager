@@ -72,7 +72,7 @@ func writeToTmpfile(secret []byte, fileNames config.FileType, fsConst Filesystem
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,
 		// Setting nolint here because file permissions octal value isn't a magic number.
 		//nolint: mnd
-		0o604,
+		0o400,
 	)
 	if err != nil {
 		return "", fmt.Errorf("didn't create tmpfile called %v with error %w", fileNames.Fullpath, err)
