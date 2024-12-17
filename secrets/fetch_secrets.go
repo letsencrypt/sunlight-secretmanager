@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"syscall"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -69,19 +68,20 @@ func (s *Secrets) FetchSecrets(ctx context.Context, seeds map[string]string, fil
 // WritetoTmpFile opens a file with restrictive user-only-read permissions and writes content to the file if it is on tmpfs.
 func writeToTmpfile(secret []byte, fileNames config.FileType, fsConst Filesystem) (string, error) {
 	tmpFile, err := os.OpenFile(
-		filepath.Join(fileNames.Fullpath, fileNames.Filename),
+		fileNames.Fullpath,
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,
+		// Setting nolint here because file permissions octal value isn't a magic number.
 		//nolint: mnd
 		0o604,
 	)
 	if err != nil {
-		return "", fmt.Errorf("didn't create tmpfile called %v with error %w", tmpFile, err)
+		return "", fmt.Errorf("didn't create tmpfile called %v with error %w", fileNames.Fullpath, err)
 	}
 
 	defer tmpFile.Close()
 
-	isLinux, err := isFilesystemFunc(tmpFile, fsConst)
-	if err != nil || !isLinux {
+	isTmpfs, err := isFilesystemFunc(tmpFile, fsConst)
+	if err != nil || !isTmpfs {
 		os.Remove(tmpFile.Name())
 
 		return "", errInvalidTmpfs

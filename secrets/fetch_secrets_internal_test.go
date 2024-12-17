@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -222,8 +221,8 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 	tempDir := t.TempDir()
 
 	testFilename := config.FileType{
-		Fullpath: tempDir,
-		Filename: filepath.Base(tempDir),
+		Fullpath: tempDir + "test.key",
+		Filename: "test.key",
 	}
 
 	isFilesystemFunc = testcase.mockCheckFunc
