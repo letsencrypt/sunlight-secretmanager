@@ -11,7 +11,7 @@ import (
 	secrets "github.com/letsencrypt/sunlight-secretmanager/secrets"
 )
 
-var linuxTmpfsConst int64 = 0x0102194
+const linuxTmpfsConst int64 = 0x0102194
 
 func main() {
 	flagset := flag.NewFlagSet("sunlight", flag.ExitOnError)
