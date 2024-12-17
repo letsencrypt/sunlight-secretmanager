@@ -80,11 +80,11 @@ func writeToTmpfile(secret []byte, fileNames config.FileType, fsConst Filesystem
 
 	defer tmpFile.Close()
 
-	isTmpfs, err := isFilesystemFunc(tmpFile, fsConst)
-	if err != nil || !isTmpfs {
+	err = verifyFilesystemFunc(tmpFile, fsConst)
+	if err != nil {
 		os.Remove(tmpFile.Name())
 
-		return "", errInvalidTmpfs
+		return "", err
 	}
 
 	if _, err := tmpFile.Write(secret); err != nil {
@@ -96,13 +96,17 @@ func writeToTmpfile(secret []byte, fileNames config.FileType, fsConst Filesystem
 	return tmpFile.Name(), nil
 }
 
-// isFilesystemFunc verifies that file is on tmpfs.
-var isFilesystemFunc = func(file *os.File, fsConst Filesystem) (bool, error) {
+// verifyFilesystemFunc verifies that file is on tmpfs.
+var verifyFilesystemFunc = func(file *os.File, fsConst Filesystem) error {
 	var statfs syscall.Statfs_t
 	err := syscall.Fstatfs(int(file.Fd()), &statfs)
 	if err != nil {
-		return false, errInvalidTmpfs
+		return fmt.Errorf("error checking filesystem: %w", err)
 	}
 
-	return Filesystem(statfs.Type) == fsConst, nil
+	if Filesystem(statfs.Type) != fsConst {
+		return errInvalidTmpfs
+	}
+
+	return nil
 }

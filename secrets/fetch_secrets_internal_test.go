@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -158,7 +159,7 @@ func runTestFetchSecrets(
 	}
 }
 
-// MockIsFilesystemFunc is a mock implementation of isFilesystemFunc.
+// MockIsFilesystemFunc is a mock implementation of verifyFilesystemFunc.
 type MockIsFilesystemFunc func(file *os.File, fs Filesystem) (bool, error)
 
 // TestWriteToTmpfile defines test cases for the writeToTmpfile function using mock implementation of IsFilesystemFunc.
@@ -167,7 +168,7 @@ func TestWriteToTmpfile(t *testing.T) {
 		name          string
 		filename      config.FileType
 		secret        []byte
-		mockCheckFunc func(file *os.File, fs Filesystem) (bool, error)
+		mockCheckFunc func(file *os.File, fs Filesystem) error
 		expectedError error
 	}{
 		{
@@ -177,8 +178,8 @@ func TestWriteToTmpfile(t *testing.T) {
 				Filename: "file.key",
 			},
 			secret: []byte{226, 151, 186},
-			mockCheckFunc: func(_ *os.File, _ Filesystem) (bool, error) {
-				return true, nil
+			mockCheckFunc: func(_ *os.File, _ Filesystem) error {
+				return nil
 			},
 			expectedError: nil,
 		},
@@ -189,8 +190,8 @@ func TestWriteToTmpfile(t *testing.T) {
 				Filename: "file.key",
 			},
 			secret: []byte{226, 151, 186},
-			mockCheckFunc: func(_ *os.File, _ Filesystem) (bool, error) {
-				return false, errFileCheckFailed
+			mockCheckFunc: func(_ *os.File, _ Filesystem) error {
+				return errFileCheckFailed
 			},
 			expectedError: errInvalidTmpfs,
 		},
@@ -212,7 +213,7 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 	name          string
 	filename      config.FileType
 	secret        []byte
-	mockCheckFunc func(file *os.File, fs Filesystem) (bool, error)
+	mockCheckFunc func(file *os.File, fs Filesystem) error
 	expectedError error
 },
 ) {
@@ -221,11 +222,11 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 	tempDir := t.TempDir()
 
 	testFilename := config.FileType{
-		Fullpath: tempDir + "test.key",
+		Fullpath: filepath.Join(tempDir, "test.key"),
 		Filename: "test.key",
 	}
 
-	isFilesystemFunc = testcase.mockCheckFunc
+	verifyFilesystemFunc = testcase.mockCheckFunc
 
 	result, err := writeToTmpfile(testcase.secret, testFilename, Filesystem(0x01021994))
 
