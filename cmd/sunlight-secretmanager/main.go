@@ -11,15 +11,15 @@ import (
 	secrets "github.com/letsencrypt/sunlight-secretmanager/secrets"
 )
 
+var linuxTmpfsConst int64 = 0x0102194
+
 func main() {
-	filesystem := flag.NewFlagSet("sunlight", flag.ExitOnError)
-	configFlag := filesystem.String("config", "", "Path to YAML config file")
+	flagset := flag.NewFlagSet("sunlight", flag.ExitOnError)
+	configFlag := flagset.String("config", "", "Path to YAML config file")
 
-	// Setting nolint here because this is value for tmpfilesystem on Linux.
-	//nolint: mnd
-	fileSystemFlag := filesystem.Int64("filesystem", 0x0102194, "OS Filesystem constant. Defaults to Linux")
+	fileSystemFlag := flagset.Int64("filesystem", linuxTmpfsConst, "OS Filesystem constant. Defaults to Linux")
 
-	if err := filesystem.Parse(os.Args[1:]); err != nil {
+	if err := flagset.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
 	}
 
