@@ -12,13 +12,14 @@ import (
 )
 
 func main() {
-	fs := flag.NewFlagSet("sunlight", flag.ExitOnError)
-	configFlag := fs.String("config", "", "Path to YAML config file")
+	filesystem := flag.NewFlagSet("sunlight", flag.ExitOnError)
+	configFlag := filesystem.String("config", "", "Path to YAML config file")
 
-	// Value for tmpfs on Linux
-	fileSystemFlag := fs.Int64("fs", 0x0102194, "OS Filesystem constant. Defaults to Linux")
+	// Setting nolint here because this is value for tmpfilesystem on Linux.
+	//nolint: mnd
+	fileSystemFlag := filesystem.Int64("filesystem", 0x0102194, "OS Filesystem constant. Defaults to Linux")
 
-	if err := fs.Parse(os.Args[1:]); err != nil {
+	if err := filesystem.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
 	}
 
