@@ -56,9 +56,9 @@ func (s *Secrets) FetchSecrets(ctx context.Context, seeds map[string]string, fil
 
 		returnedKeys[*secretName] = secretValue
 
-		file, err := writeToTmpfile(secretValue, fileNamesMap[*secretName], fsConst)
-		if file == "" || err != nil {
-			return nil, fmt.Errorf("couldn't write secret to file %v with error %w because filesystem const is %v", file, err, fsConst)
+		_, err = writeToTmpfile(secretValue, fileNamesMap[*secretName], fsConst)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't write secret to file %v with error %w", fileNamesMap[*secretName].Fullpath, err)
 		}
 	}
 
@@ -66,16 +66,17 @@ func (s *Secrets) FetchSecrets(ctx context.Context, seeds map[string]string, fil
 }
 
 // WritetoTmpFile opens a file with restrictive user-only-read permissions and writes content to the file if it is on tmpfs.
-func writeToTmpfile(secret []byte, fileNames config.FileType, fsConst Filesystem) (string, error) {
+func writeToTmpfile(secret []byte, fileMeta config.FileType, fsConst Filesystem) (string, error) {
+	// We currently assume that the directory we are trying to write to already exists.
 	tmpFile, err := os.OpenFile(
-		fileNames.Fullpath,
+		fileMeta.Fullpath,
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,
 		// Setting nolint here because file permissions octal value isn't a magic number.
 		//nolint: mnd
 		0o400,
 	)
 	if err != nil {
-		return "", fmt.Errorf("didn't create tmpfile called %v with error %w", fileNames.Fullpath, err)
+		return "", fmt.Errorf("didn't create tmpfile called %v with error %w", fileMeta.Fullpath, err)
 	}
 
 	defer tmpFile.Close()
@@ -105,7 +106,7 @@ var verifyFilesystemFunc = func(file *os.File, fsConst Filesystem) error {
 	}
 
 	if Filesystem(statfs.Type) != fsConst {
-		return errInvalidTmpfs
+		return fmt.Errorf("checking if filesystem is %d: %w", fsConst, errInvalidTmpfs)
 	}
 
 	return nil

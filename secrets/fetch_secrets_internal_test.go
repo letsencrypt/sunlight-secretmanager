@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,9 +19,9 @@ import (
 
 // Represents error cases.
 var (
-	errSecretIDNil     = errors.New("SecretId cannot be nil")
-	errSecretNotFound  = errors.New("secret not found")
-	errFileCheckFailed = errors.New("filesystem check failed")
+	errSecretIDNil    = errors.New("SecretId cannot be nil")
+	errSecretNotFound = errors.New("secret not found")
+	//errFileCheckFailed = errors.New("filesystem check failed")
 )
 
 // mockSecretsManager API is a mock implementation of AWSSecretsManagerAPI interface.
@@ -174,7 +175,7 @@ func TestWriteToTmpfile(t *testing.T) {
 		{
 			name: "Successful",
 			filename: config.FileType{
-				Fullpath: "/etc/filename",
+				Fullpath: "/etc/file.key",
 				Filename: "file.key",
 			},
 			secret: []byte{226, 151, 186},
@@ -186,12 +187,12 @@ func TestWriteToTmpfile(t *testing.T) {
 		{
 			name: "Error",
 			filename: config.FileType{
-				Fullpath: "/etc/filename",
+				Fullpath: "/etc/file.key",
 				Filename: "file.key",
 			},
 			secret: []byte{226, 151, 186},
 			mockCheckFunc: func(_ *os.File, _ Filesystem) error {
-				return errFileCheckFailed
+				return errInvalidTmpfs
 			},
 			expectedError: errInvalidTmpfs,
 		},
@@ -230,11 +231,12 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 
 	result, err := writeToTmpfile(testcase.secret, testFilename, Filesystem(0x01021994))
 
-	if !errors.Is(errors.Unwrap(err), errors.Unwrap(testcase.expectedError)) {
+	if testcase.expectedError != nil && !errors.Is(err, testcase.expectedError) {
 		t.Errorf("expected error %v got %v", testcase.expectedError, err)
 	}
 
-	if result != "" {
+	if testcase.expectedError == nil {
+		fmt.Printf("test case: %v - result %v, error %v \n", testcase.name, result, err)
 		if !strings.HasPrefix(result, tempDir) {
 			t.Errorf("file not created in expected directory. Got %s, want prefix %s", result, tempDir)
 		}

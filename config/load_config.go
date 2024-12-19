@@ -34,7 +34,9 @@ type LogConfig struct {
 
 // FileType represents a file with its full path and filename.
 type FileType struct {
+	// Fullpath to secrets file such as /etc/file.key.
 	Fullpath string
+	// Name of the secrets file such as file.key.
 	Filename string
 }
 
