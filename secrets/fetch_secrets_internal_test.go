@@ -198,9 +198,9 @@ func TestWriteToTmpfile(t *testing.T) {
 		},
 	}
 
-	// Setting nolint here because parallel running of subtests mutates global variable verifyFilesystemFunc
-	for _, testcase := range testCases { //nolint: tparallel
+	for _, testcase := range testCases {
 		t.Run(testcase.name, func(t *testing.T) {
+			t.Parallel()
 			runWriteToTmpfileTest(t, testcase)
 		})
 	}
@@ -225,9 +225,9 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 		Filename: "test.key",
 	}
 
-	verifyFilesystemFunc = testcase.mockCheckFunc
+	// verifyFilesystemFunc = testcase.mockCheckFunc
 
-	result, err := writeToTmpfile(testcase.secret, testFilename, Filesystem(0x01021994))
+	result, err := writeToTmpfile(testcase.secret, testFilename, Filesystem(0x01021994), testcase.mockCheckFunc)
 
 	if testcase.expectedError != nil && !errors.Is(err, testcase.expectedError) {
 		t.Errorf("expected error %v got %v", testcase.expectedError, err)
