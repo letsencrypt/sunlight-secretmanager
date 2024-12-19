@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,7 +20,6 @@ import (
 var (
 	errSecretIDNil    = errors.New("SecretId cannot be nil")
 	errSecretNotFound = errors.New("secret not found")
-	//errFileCheckFailed = errors.New("filesystem check failed")
 )
 
 // mockSecretsManager API is a mock implementation of AWSSecretsManagerAPI interface.
@@ -165,6 +163,8 @@ type MockIsFilesystemFunc func(file *os.File, fs Filesystem) (bool, error)
 
 // TestWriteToTmpfile defines test cases for the writeToTmpfile function using mock implementation of IsFilesystemFunc.
 func TestWriteToTmpfile(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name          string
 		filename      config.FileType
@@ -198,11 +198,9 @@ func TestWriteToTmpfile(t *testing.T) {
 		},
 	}
 
-	t.Parallel()
-
-	for _, testcase := range testCases {
+	// Setting nolint here because parallel running of subtests mutates global variable verifyFilesystemFunc
+	for _, testcase := range testCases { //nolint: tparallel
 		t.Run(testcase.name, func(t *testing.T) {
-			t.Parallel()
 			runWriteToTmpfileTest(t, testcase)
 		})
 	}
@@ -236,7 +234,6 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 	}
 
 	if testcase.expectedError == nil {
-		fmt.Printf("test case: %v - result %v, error %v \n", testcase.name, result, err)
 		if !strings.HasPrefix(result, tempDir) {
 			t.Errorf("file not created in expected directory. Got %s, want prefix %s", result, tempDir)
 		}
