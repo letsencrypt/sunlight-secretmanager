@@ -225,8 +225,6 @@ func runWriteToTmpfileTest(t *testing.T, testcase struct {
 		Filename: "test.key",
 	}
 
-	// verifyFilesystemFunc = testcase.mockCheckFunc
-
 	result, err := writeToTmpfile(testcase.secret, testFilename, Filesystem(0x01021994), testcase.mockCheckFunc)
 
 	if testcase.expectedError != nil && !errors.Is(err, testcase.expectedError) {
