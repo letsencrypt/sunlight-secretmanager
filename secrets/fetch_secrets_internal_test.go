@@ -158,9 +158,6 @@ func runTestFetchSecrets(
 	}
 }
 
-// MockIsFilesystemFunc is a mock implementation of verifyFilesystemFunc.
-type MockIsFilesystemFunc func(file *os.File, fs Filesystem) (bool, error)
-
 // TestWriteToTmpfile defines test cases for the writeToTmpfile function using mock implementation of IsFilesystemFunc.
 func TestWriteToTmpfile(t *testing.T) {
 	t.Parallel()
