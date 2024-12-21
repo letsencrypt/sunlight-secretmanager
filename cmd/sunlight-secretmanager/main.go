@@ -17,7 +17,7 @@ func main() {
 	flagset := flag.NewFlagSet("sunlight", flag.ExitOnError)
 	configFlag := flagset.String("config", "", "Path to YAML config file")
 
-	fileSystemFlag := flagset.Int64("filesystem", linuxTmpfsConst, "OS Filesystem constant. Defaults to Linux")
+	fileSystemFlag := flagset.Int64("filesystem", linuxTmpfsConst, "OS Filesystem constant to enforce writing to. Defaults to Linux tmpfs")
 
 	if err := flagset.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
