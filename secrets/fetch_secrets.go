@@ -24,7 +24,7 @@ type Secrets struct {
 	svc AWSSecretsManagerAPI
 }
 
-// Filesystem represents tmpfs const.
+// Filesystem represents a filesystem identifier as returned from fstatfs.
 type Filesystem int64
 
 func New(cfg aws.Config) *Secrets {
