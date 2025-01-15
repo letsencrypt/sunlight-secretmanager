@@ -58,7 +58,7 @@ func (s *Secrets) FetchSecrets(ctx context.Context, seeds map[string]string, fil
 
 		_, err = writeToTmpfile(secretValue, fileNamesMap[*secretName], fsConst, verifyFilesystem)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't write secret to file %v with error %w", fileNamesMap[*secretName].Fullpath, err)
+			return nil, fmt.Errorf("couldn't write secret to file %v: %w", fileNamesMap[*secretName].Fullpath, err)
 		}
 	}
 
