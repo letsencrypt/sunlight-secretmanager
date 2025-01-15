@@ -76,7 +76,7 @@ func writeToTmpfile(secret []byte, fileMeta config.FileType, fsConst Filesystem,
 		0o400,
 	)
 	if err != nil {
-		return "", fmt.Errorf("didn't create tmpfile called %v with error %w", fileMeta.Fullpath, err)
+        return "", fmt.Errorf("didn't create tmpfile called %v: %w", fileMeta.Fullpath, err)
 	}
 
 	defer tmpFile.Close()
@@ -91,7 +91,7 @@ func writeToTmpfile(secret []byte, fileMeta config.FileType, fsConst Filesystem,
 	if _, err := tmpFile.Write(secret); err != nil {
 		os.Remove(tmpFile.Name())
 
-		return "", fmt.Errorf("couldn't write to tmpfile with error %w", err)
+        return "", fmt.Errorf("couldn't write to tmpfile: %w", err)
 	}
 
 	return tmpFile.Name(), nil
