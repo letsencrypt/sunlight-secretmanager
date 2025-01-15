@@ -11,7 +11,8 @@ import (
 	secrets "github.com/letsencrypt/sunlight-secretmanager/secrets"
 )
 
-const linuxTmpfsConst int64 = 0x0102194
+// Documentation for linuxTmpfsConst: https://elixir.bootlin.com/linux/v4.6/source/include/uapi/linux/magic.h#L16
+const linuxTmpfsConst int64 = 0x01021994
 
 func main() {
 	flagset := flag.NewFlagSet("sunlight", flag.ExitOnError)
