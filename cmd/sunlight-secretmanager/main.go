@@ -11,11 +11,16 @@ import (
 	secrets "github.com/letsencrypt/sunlight-secretmanager/secrets"
 )
 
-func main() {
-	fs := flag.NewFlagSet("sunlight", flag.ExitOnError)
-	configFlag := fs.String("config", "", "Path to YAML config file")
+// Documentation for linuxTmpfsConst: https://elixir.bootlin.com/linux/v4.6/source/include/uapi/linux/magic.h#L16
+const linuxTmpfsConst int64 = 0x01021994
 
-	if err := fs.Parse(os.Args[1:]); err != nil {
+func main() {
+	flagset := flag.NewFlagSet("sunlight", flag.ExitOnError)
+	configFlag := flagset.String("config", "", "Path to YAML config file")
+
+	fileSystemFlag := flagset.Int64("filesystem", linuxTmpfsConst, "OS Filesystem constant to enforce writing to. Defaults to Linux tmpfs")
+
+	if err := flagset.Parse(os.Args[1:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
 	}
 
@@ -35,7 +40,7 @@ func main() {
 
 	secret := secrets.New(cfg)
 
-	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap)
+	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap, secrets.Filesystem(*fileSystemFlag))
 	if err != nil {
 		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
 	}
