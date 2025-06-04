@@ -31,3 +31,10 @@ jobs:
       uses: golangci/golangci-lint-action@v8
       with:
         version: v2.1.6
+
+    - name: Vendorcheck
+      shell: bash
+      run: |
+        go mod tidy
+        go mod vendor
+        git diff --exit-code
