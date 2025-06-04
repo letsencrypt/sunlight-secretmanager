@@ -1,3 +1,5 @@
+// Package config defines sunlight-secretmanager's yaml config format, and
+// provides utilities for loading and parsing a config file.
 package config
 
 import (

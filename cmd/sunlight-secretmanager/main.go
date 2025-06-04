@@ -1,3 +1,9 @@
+// Sunlight-secretmanager creates new Sunlight CT Log instances, ensuring that
+// their signing keys are stored in an appropriate location.
+//
+// Usage:
+//
+//	sunlight-secretmanager -config /path/to/config.yaml
 package main
 
 import (
