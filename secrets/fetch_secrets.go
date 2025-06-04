@@ -1,3 +1,5 @@
+// Package secrets interacts with the AWS SecretManager API to retrieve secrets
+// and store them on a tmpfs.
 package secrets
 
 import (
@@ -20,6 +22,7 @@ type AWSSecretsManagerAPI interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
 }
 
+// Secrets provides access to secrets stored in AWS.
 type Secrets struct {
 	svc AWSSecretsManagerAPI
 }
@@ -27,6 +30,7 @@ type Secrets struct {
 // Filesystem represents a filesystem identifier as returned from fstatfs.
 type Filesystem int64
 
+// New uses the provided config to construct a new AWS Secret Manager client.
 func New(cfg aws.Config) *Secrets {
 	return &Secrets{
 		svc: secretsmanager.NewFromConfig(cfg),

@@ -2,8 +2,8 @@ name: Go Tests
 
 on:
   push:
-    branches: 
-      - '**'
+    branches:
+      - 'main'
   pull_request:
     branches:
       - '**'
@@ -19,7 +19,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.23
+        go-version: 'stable'
 
     - name: Build
       run: go build -v ./...
@@ -28,6 +28,6 @@ jobs:
       run: go test -v ./...
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v8
       with:
-        version: v1.61
+        version: v2.1.6

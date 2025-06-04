@@ -1,26 +1,22 @@
-linters-settings:
-  gocyclo:
-    min-complexity: 25
-  govet:
-    check-shadowing: false
-  misspell:
-    locale: "US"
-
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - musttag
-    - gci
-    - stylecheck
-    - gosec
-    - dupl
     - depguard
     - lll
-    - prealloc
-    - gocritic
-    - gochecknoinits
-    - gochecknoglobals
-    # These are deprecated
-    - execinquery
-    - exportloopref
-    - gomnd
+    - musttag
+  settings:
+    misspell:
+      locale: US
+    gosec:
+      excludes:
+        - G104 # Errors unhandled
+        - G304 # Potential file inclusion via variable
+  exclusions:
+    presets:
+      - std-error-handling
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
