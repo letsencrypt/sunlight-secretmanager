@@ -1,13 +1,33 @@
-# sunlight-secretsmanager
+# sunlight-secretmanager
 
-[![Build Status](https://github.com/letsencrypt/sunlight-secretsmanager/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/letsencrypt/sunlight-secretsmanager/actions/workflows/test.yml?query=branch%3Amain)
+sunlight-secretmanager is a command-line tool to manage a
+[Sunlight](https://sunlight.dev/) CT Log's private key material.
 
-A short description of the project goes here.
+All CT logs have a private key which they use to create Signed Certificate
+Timestamps (SCTs) and Signed Tree Heads (STHs). Sunlight does not take this
+private key as input directly. Instead, its configuration requires two file
+paths:
+
+- A seed file containing at least 32 bytes of random data, from which the log's
+  ECDSA P-256 key will be derived; and
+- A PEM file containing the corresponding ECDSA P-256 public key.
+
+The purpose of sunlight-secretmanager is to authenticate to AWS Secrets Manager,
+retrieve a stored seed, use that seed to derive the corresponding pubkey, and
+write both files to disk in a tmpfs. It knows what seed to retrieve and where to
+write the output files by parsing the same config file which configures the
+Sunlight log itself.
+
+If it successfully retrieves a secret from AWS Secrets Manager but that secret
+is empty, it will generate a new seed and save it back to AWS before proceeding.
+This allows for seamless setup of new log shards simply by adding them to
+Terraform.
 
 ## Usage
 
-How to use the project, whether in source or binary form.
+Sign in the AWS SDK so it populates your environment with the appropriate
+values, and then:
 
-## Contributing
-
-How to set up a development environment, make changes, and run tests.
+```shell
+$ sunlight-secretmanager -config /path/to/sunlight/config.yml
+```
