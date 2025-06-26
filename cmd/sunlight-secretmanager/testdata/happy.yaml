@@ -1,0 +1,22 @@
+acme:
+  email: test@example.com
+  host: test.sunlight-secretmanager.tld
+  cache: /path/to/acme/cache/
+
+checkpoints: /var/db/sunlight/checkpoints.db
+
+logs:
+
+  - name: test.tld/shard1
+    shortname: shard1
+    inception: 2024-08-07
+    secret: /path/to/shard1.seed
+    notafterstart: 2025-01-01T00:00:00Z
+    notafterlimit: 2025-07-01T00:00:00Z
+
+  - name: test.tld/shard2
+    shortname: shard2
+    inception: 2024-08-07
+    secret: /path/to/shard2.seed
+    notafterstart: 2025-07-01T00:00:00Z
+    notafterlimit: 2026-01-01T00:00:00Z

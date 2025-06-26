@@ -1,0 +1,6 @@
+acme:
+  email: sunlight-acme@filippo.io
+  host: rome.ct.filippo.io
+  cache: /var/db/sunlight/autocert/
+
+checkpoints: /var/db/sunlight/checkpoints.db

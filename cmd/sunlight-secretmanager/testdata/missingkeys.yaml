@@ -1,0 +1,12 @@
+logs:
+
+  - name: rome.ct.filippo.io/2025h1
+    shortname: 2025h1b
+    secret: /etc/radiantlog-twig.ct.letsencrypt.org-2025h1b.key
+    notafterstart: 2025-01-01T00:00:00Z
+    notafterlimit: 2025-07-01T00:00:00Z
+
+  - name: rome.ct.filippo.io/2025h2
+    shortname: 2025h2b
+    inception: 2024-08-07
+    roots: /etc/sunlight/roots.pem

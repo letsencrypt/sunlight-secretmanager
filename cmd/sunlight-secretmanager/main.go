@@ -1,5 +1,8 @@
-// Sunlight-secretmanager creates new Sunlight CT Log instances, ensuring that
-// their signing keys are stored in an appropriate location.
+// sunlight-secretmanager ensures that Sunlight CT Log instances have access to
+// their secret key material. In particular, it reads the log's config file,
+// extracts the paths at which each log in that config expects to find its
+// key material, fetches the corresponding secrets from the AWS Secrets Manager
+// API, and writes the secrets to the expected location.
 //
 // Usage:
 //
@@ -13,45 +16,48 @@ import (
 	"os"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/letsencrypt/sunlight-secretmanager/config"
-	secrets "github.com/letsencrypt/sunlight-secretmanager/secrets"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
-// Documentation for linuxTmpfsConst: https://elixir.bootlin.com/linux/v4.6/source/include/uapi/linux/magic.h#L16
-const linuxTmpfsConst int64 = 0x01021994
+// tmpfsMagic is the magic number used to indicate that a unix filesystem is
+// a tmpfs. The value is copied from golang.org/x/sys/unix.TMPFS_MAGIC, which we
+// can't use here because its source file has a "go:build linux" directive.
+// https://cs.opensource.google/go/x/sys/+/refs/tags/v0.34.0:unix/zerrors_linux.go;l=3498
+const tmpfsMagic = 0x1021994
 
 func main() {
-	flagset := flag.NewFlagSet("sunlight", flag.ExitOnError)
+	flagset := flag.NewFlagSet("sunlight-secretmanager", flag.ContinueOnError)
 	configFlag := flagset.String("config", "", "Path to YAML config file")
+	fileSystemFlag := flagset.Int64("filesystem", tmpfsMagic, "OS Filesystem constant to enforce writing to. Defaults to Linux tmpfs")
 
-	fileSystemFlag := flagset.Int64("filesystem", linuxTmpfsConst, "OS Filesystem constant to enforce writing to. Defaults to Linux tmpfs")
-
-	if err := flagset.Parse(os.Args[1:]); err != nil {
-		log.Fatalf("Error parsing flags: %v", err)
-	}
-
-	nameSeedMap, fileNamesMap, err := config.LoadConfigFromYaml(*configFlag)
+	err := flagset.Parse(os.Args[1:])
 	if err != nil {
-		log.Fatalf("failed to read or parse config file: [%v], err: [%v]", configFlag, err)
+		log.Fatalf("Error parsing flags: %s", err)
 	}
 
-	log.Printf("seeds: %v", nameSeedMap)
+	config, err := loadConfig(*configFlag)
+	if err != nil {
+		log.Fatalf("Error loading config: %s", err)
+	}
 
 	ctx := context.Background()
 
 	cfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithSharedConfigProfile(os.Getenv("AWS_PROFILE")))
 	if err != nil {
-		log.Fatalf("unable to load AWS config: %v", err)
+		log.Fatalf("Error loading default AWS config: %s", err)
 	}
 
-	secret := secrets.New(cfg)
+	sm := secretsmanager.NewFromConfig(cfg)
 
-	returnedKeys, err := secret.FetchSecrets(ctx, nameSeedMap, fileNamesMap, secrets.Filesystem(*fileSystemFlag))
-	if err != nil {
-		log.Printf("failed to load AWS config: [%v], err: [%v]", configFlag, err)
-	}
+	for _, logConfig := range config.Logs {
+		seed, err := fetchSeed(ctx, sm, logConfig.Secret)
+		if err != nil {
+			log.Fatalf("Error fetching seed for %q: %v", logConfig.Name, err)
+		}
 
-	for key := range returnedKeys {
-		log.Printf("successfully loaded key %v", key)
+		err = writeFile(logConfig.Secret, seed, *fileSystemFlag)
+		if err != nil {
+			log.Fatalf("Error persisting seed for %q: %v", logConfig.Name, err)
+		}
 	}
 }
