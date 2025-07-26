@@ -73,16 +73,8 @@ func getOrCreateSeed(ctx context.Context, id string, inception string, smClient 
 	}
 
 	if len(seed) == 0 {
-		// AWS believes this seed hasn't been created. If that makes sense
-		// (because the log hasn't been started yet), create it. Otherwise,
-		// bail out.
-		inceptionTime, err := time.Parse(time.RFC3339, inception)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing log inception %q: %w", inception, err)
-		}
-
-		if time.Now().After(inceptionTime) {
-			return nil, errors.New("log has empty seed, but should have been initialized already")
+		if time.Now().Format(time.DateOnly) != inception {
+			return nil, errors.New("log has empty seed, but today is not the Inception date")
 		}
 
 		seed, err = createSeed(ctx, smClient, id)
