@@ -2,16 +2,25 @@ version: "2"
 linters:
   default: all
   disable:
+    - err113
     - depguard
     - lll
     - musttag
+    - wsl
+    - wsl_v5
   settings:
     misspell:
       locale: US
+    funlen:
+      lines: -1
     gosec:
       excludes:
         - G104 # Errors unhandled
         - G304 # Potential file inclusion via variable
+    varnamelen:
+      ignore-names:
+        - id
+        - tc
   exclusions:
     presets:
       - std-error-handling
