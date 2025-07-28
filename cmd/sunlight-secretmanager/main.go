@@ -11,9 +11,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"time"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -47,17 +51,37 @@ func main() {
 		log.Fatalf("Error loading default AWS config: %s", err)
 	}
 
-	sm := secretsmanager.NewFromConfig(cfg)
+	smClient := secretsmanager.NewFromConfig(cfg)
 
-	for _, logConfig := range config.Logs {
-		seed, err := fetchSeed(ctx, sm, logConfig.Secret)
+	for _, logConf := range config.Logs {
+		seed, err := getOrCreateSeed(ctx, filepath.Base(logConf.Secret), logConf.Inception, smClient)
 		if err != nil {
-			log.Fatalf("Error fetching seed for %q: %v", logConfig.Name, err)
+			log.Fatalf("Error getting seed for log %q: %v", logConf.Name, err)
 		}
 
-		err = writeFile(logConfig.Secret, seed, *fileSystemFlag)
+		err = writeFile(logConf.Secret, seed, *fileSystemFlag)
 		if err != nil {
-			log.Fatalf("Error persisting seed for %q: %v", logConfig.Name, err)
+			log.Fatalf("Error persisting seed for log %q: %v", logConf.Name, err)
 		}
 	}
+}
+
+func getOrCreateSeed(ctx context.Context, id string, inception string, smClient SecretsManager) ([]byte, error) {
+	seed, err := fetchSeed(ctx, smClient, id)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching seed: %w", err)
+	}
+
+	if len(seed) == 0 {
+		if time.Now().Format(time.DateOnly) != inception {
+			return nil, errors.New("log has empty seed, but today is not the Inception date")
+		}
+
+		seed, err = createSeed(ctx, smClient, id)
+		if err != nil {
+			return nil, fmt.Errorf("error creating seed: %w", err)
+		}
+	}
+
+	return seed, nil
 }
