@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
 // All Sunlight seeds must be exactly 32 bytes.
@@ -29,6 +31,10 @@ func fetchSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte,
 
 	res, err := smClient.GetSecretValue(ctx, req)
 	if err != nil {
+		var notFound *types.ResourceNotFoundException
+		if errors.As(err, &notFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("retrieving secret %q: %w", id, err)
 	}
 
