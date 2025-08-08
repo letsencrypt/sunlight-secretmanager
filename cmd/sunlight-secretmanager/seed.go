@@ -18,7 +18,7 @@ const seedLen = 32
 // or equivalent implementation. This makes it easier to mock for testing.
 type SecretsManager interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
-	CreateSecret(ctx context.Context, params *secretsmanager.CreateSecretInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error)
+	PutSecretValue(ctx context.Context, params *secretsmanager.PutSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.PutSecretValueOutput, error)
 }
 
 // fetchSeed retrieves a secret value from the provided SecretsManager.
@@ -48,19 +48,12 @@ func createSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte
 	seed := make([]byte, seedLen)
 	_, _ = rand.Read(seed)
 
-	req := &secretsmanager.CreateSecretInput{
-		Name:                        aws.String(id),
-		AddReplicaRegions:           nil,
-		ClientRequestToken:          nil,
-		Description:                 nil,
-		ForceOverwriteReplicaSecret: false,
-		KmsKeyId:                    nil,
-		SecretBinary:                seed,
-		SecretString:                nil,
-		Tags:                        nil,
+	req := &secretsmanager.PutSecretValueInput{
+		SecretId:     aws.String(id),
+		SecretBinary: seed,
 	}
 
-	_, err := smClient.CreateSecret(ctx, req)
+	_, err := smClient.PutSecretValue(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("creating secret %q: %w", id, err)
 	}

@@ -38,8 +38,8 @@ func (sm *fakeSecretsManager) GetSecretValue(_ context.Context, params *secretsm
 	}
 }
 
-func (sm *fakeSecretsManager) CreateSecret(_ context.Context, params *secretsmanager.CreateSecretInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error) {
-	if params.Name == nil || len(*params.Name) == 0 || len(params.SecretBinary) == 0 {
+func (sm *fakeSecretsManager) PutSecretValue(ctx context.Context, params *secretsmanager.PutSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.PutSecretValueOutput, error) {
+	if params.SecretId == nil || len(*params.SecretId) == 0 || len(params.SecretBinary) == 0 {
 		return nil, errors.New("incomplete request")
 	}
 
@@ -47,17 +47,16 @@ func (sm *fakeSecretsManager) CreateSecret(_ context.Context, params *secretsman
 		return nil, errors.New("can't specify both SecretBinary and SecretString")
 	}
 
-	if *params.Name == "error" {
-		return nil, fmt.Errorf("error 500 creating secret %q", *params.Name)
+	if *params.SecretId == "error" {
+		return nil, fmt.Errorf("error 500 creating secret %q", *params.SecretId)
 	}
 
 	if len(params.SecretBinary) != 32 {
 		return nil, fmt.Errorf("bad seed length: %d", len(params.SecretBinary))
 	}
 
-	return &secretsmanager.CreateSecretOutput{ //nolint:exhaustruct
-		ARN:       aws.String(*params.Name + "-123456"),
-		Name:      params.Name,
+	return &secretsmanager.PutSecretValueOutput{
+		ARN:       aws.String(*params.SecretId),
 		VersionId: aws.String("919108f7-52d1-4320-9bac-f847db4148a8"),
 	}, nil
 }
