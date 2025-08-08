@@ -52,12 +52,12 @@ func TestLoadConfig(t *testing.T) {
 			want: &config{
 				Logs: []logConfig{
 					{
-						Name:      "test.tld/shard1",
+						ShortName: "test.tld/shard1",
 						Inception: "2024-08-07",
 						Secret:    "/path/to/shard1.seed",
 					},
 					{
-						Name:      "test.tld/shard2",
+						ShortName: "test.tld/shard2",
 						Inception: "2024-08-07",
 						Secret:    "/path/to/shard2.seed",
 					},
