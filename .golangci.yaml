@@ -2,8 +2,9 @@ version: "2"
 linters:
   default: all
   disable:
-    - err113
     - depguard
+    - err113
+    - exhaustruct
     - lll
     - musttag
     - wsl

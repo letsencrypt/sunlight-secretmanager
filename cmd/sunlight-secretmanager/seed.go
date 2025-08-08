@@ -35,6 +35,7 @@ func fetchSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte,
 		if errors.As(err, &notFound) {
 			return nil, nil
 		}
+
 		return nil, fmt.Errorf("retrieving secret %q: %w", id, err)
 	}
 

@@ -25,11 +25,11 @@ func (sm *fakeSecretsManager) GetSecretValue(_ context.Context, params *secretsm
 	case "missing":
 		return nil, fmt.Errorf("secret %q not found", *params.SecretId)
 	case "empty":
-		return &secretsmanager.GetSecretValueOutput{ //nolint:exhaustruct
+		return &secretsmanager.GetSecretValueOutput{
 			Name: aws.String("empty"),
 		}, nil
 	case "real":
-		return &secretsmanager.GetSecretValueOutput{ //nolint:exhaustruct
+		return &secretsmanager.GetSecretValueOutput{
 			Name:         aws.String("real"),
 			SecretBinary: []byte("hello world"),
 		}, nil
@@ -38,7 +38,7 @@ func (sm *fakeSecretsManager) GetSecretValue(_ context.Context, params *secretsm
 	}
 }
 
-func (sm *fakeSecretsManager) PutSecretValue(ctx context.Context, params *secretsmanager.PutSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.PutSecretValueOutput, error) {
+func (sm *fakeSecretsManager) PutSecretValue(_ context.Context, params *secretsmanager.PutSecretValueInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.PutSecretValueOutput, error) {
 	if params.SecretId == nil || len(*params.SecretId) == 0 || len(params.SecretBinary) == 0 {
 		return nil, errors.New("incomplete request")
 	}
