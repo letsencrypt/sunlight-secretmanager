@@ -136,7 +136,7 @@ func TestCreateSeed(t *testing.T) {
 		{
 			name:    "error",
 			id:      "error",
-			wantErr: "creating secret \"error\": error 500 creating secret",
+			wantErr: "putting secret value for \"error\": error 500 creating secret",
 		},
 		{
 			name:    "happy path",
