@@ -33,7 +33,8 @@ func fetchSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte,
 	if err != nil {
 		var notFound *types.ResourceNotFoundException
 		if errors.As(err, &notFound) {
-			return nil, nil
+			// Secret not found: return empty slice and nil error to indicate absence.
+			return []byte{}, nil
 		}
 
 		return nil, fmt.Errorf("retrieving secret %q: %w", id, err)
@@ -56,7 +57,7 @@ func createSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte
 
 	_, err := smClient.PutSecretValue(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("creating secret %q: %w", id, err)
+		return nil, fmt.Errorf("putting secret value for %q: %w", id, err)
 	}
 
 	return seed, nil
