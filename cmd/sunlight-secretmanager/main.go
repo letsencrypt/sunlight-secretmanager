@@ -56,12 +56,12 @@ func main() {
 	for _, logConf := range config.Logs {
 		seed, err := getOrCreateSeed(ctx, filepath.Base(logConf.Secret), logConf.Inception, smClient)
 		if err != nil {
-			log.Fatalf("Error getting seed for log %q: %v", logConf.Name, err)
+			log.Fatalf("Error getting seed for log %q: %v", logConf.ShortName, err)
 		}
 
 		err = writeFile(logConf.Secret, seed, *fileSystemFlag)
 		if err != nil {
-			log.Fatalf("Error persisting seed for log %q: %v", logConf.Name, err)
+			log.Fatalf("Error persisting seed for log %q: %v", logConf.ShortName, err)
 		}
 	}
 }

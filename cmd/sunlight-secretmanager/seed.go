@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
 // All Sunlight seeds must be exactly 32 bytes.
@@ -16,7 +18,7 @@ const seedLen = 32
 // or equivalent implementation. This makes it easier to mock for testing.
 type SecretsManager interface {
 	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
-	CreateSecret(ctx context.Context, params *secretsmanager.CreateSecretInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error)
+	PutSecretValue(ctx context.Context, params *secretsmanager.PutSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.PutSecretValueOutput, error)
 }
 
 // fetchSeed retrieves a secret value from the provided SecretsManager.
@@ -29,6 +31,12 @@ func fetchSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte,
 
 	res, err := smClient.GetSecretValue(ctx, req)
 	if err != nil {
+		var notFound *types.ResourceNotFoundException
+		if errors.As(err, &notFound) {
+			// Secret not found: return empty slice and nil error to indicate absence.
+			return []byte{}, nil
+		}
+
 		return nil, fmt.Errorf("retrieving secret %q: %w", id, err)
 	}
 
@@ -42,21 +50,14 @@ func createSeed(ctx context.Context, smClient SecretsManager, id string) ([]byte
 	seed := make([]byte, seedLen)
 	_, _ = rand.Read(seed)
 
-	req := &secretsmanager.CreateSecretInput{
-		Name:                        aws.String(id),
-		AddReplicaRegions:           nil,
-		ClientRequestToken:          nil,
-		Description:                 nil,
-		ForceOverwriteReplicaSecret: false,
-		KmsKeyId:                    nil,
-		SecretBinary:                seed,
-		SecretString:                nil,
-		Tags:                        nil,
+	req := &secretsmanager.PutSecretValueInput{
+		SecretId:     aws.String(id),
+		SecretBinary: seed,
 	}
 
-	_, err := smClient.CreateSecret(ctx, req)
+	_, err := smClient.PutSecretValue(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("creating secret %q: %w", id, err)
+		return nil, fmt.Errorf("putting secret value for %q: %w", id, err)
 	}
 
 	return seed, nil

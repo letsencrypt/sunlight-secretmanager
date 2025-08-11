@@ -16,9 +16,9 @@ type config struct {
 // logConfig is a subset of Sunlight's LogConfig. We use it to load just the
 // info we need about each individual log.
 type logConfig struct {
-	// Name is the unique human-readable identifier of the log. We use it for
-	// logging purposes.
-	Name string
+	// ShortName is the unique human-readable identifier of the log. We use it
+	// for logging purposes.
+	ShortName string
 	// Inception is the date at which the log will begin functioning. If the
 	// Inception date is in the future, and the Secret retrieved from AWS is
 	// empty, then sunlight-secretmanager will create a new secret. If the
@@ -50,8 +50,8 @@ func loadConfig(configFile string) (*config, error) {
 	}
 
 	for _, log := range sunlightConfig.Logs {
-		if log.Name == "" || log.Inception == "" || log.Secret == "" {
-			return nil, fmt.Errorf("incomplete config for log %q in config file %q", log.Name, configFile)
+		if log.ShortName == "" || log.Inception == "" || log.Secret == "" {
+			return nil, fmt.Errorf("incomplete config for log %q in config file %q", log.ShortName, configFile)
 		}
 	}
 

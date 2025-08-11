@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
 type fakeSecretsManager struct{}
@@ -25,11 +26,9 @@ func (sm *fakeSecretsManager) GetSecretValue(_ context.Context, params *secretsm
 	case "missing":
 		return nil, fmt.Errorf("secret %q not found", *params.SecretId)
 	case "empty":
-		return &secretsmanager.GetSecretValueOutput{ //nolint:exhaustruct
-			Name: aws.String("empty"),
-		}, nil
+		return nil, &types.ResourceNotFoundException{Message: aws.String("secret does not exist")}
 	case "real":
-		return &secretsmanager.GetSecretValueOutput{ //nolint:exhaustruct
+		return &secretsmanager.GetSecretValueOutput{
 			Name:         aws.String("real"),
 			SecretBinary: []byte("hello world"),
 		}, nil
@@ -38,8 +37,8 @@ func (sm *fakeSecretsManager) GetSecretValue(_ context.Context, params *secretsm
 	}
 }
 
-func (sm *fakeSecretsManager) CreateSecret(_ context.Context, params *secretsmanager.CreateSecretInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error) {
-	if params.Name == nil || len(*params.Name) == 0 || len(params.SecretBinary) == 0 {
+func (sm *fakeSecretsManager) PutSecretValue(_ context.Context, params *secretsmanager.PutSecretValueInput, _ ...func(*secretsmanager.Options)) (*secretsmanager.PutSecretValueOutput, error) {
+	if params.SecretId == nil || len(*params.SecretId) == 0 || len(params.SecretBinary) == 0 {
 		return nil, errors.New("incomplete request")
 	}
 
@@ -47,17 +46,16 @@ func (sm *fakeSecretsManager) CreateSecret(_ context.Context, params *secretsman
 		return nil, errors.New("can't specify both SecretBinary and SecretString")
 	}
 
-	if *params.Name == "error" {
-		return nil, fmt.Errorf("error 500 creating secret %q", *params.Name)
+	if *params.SecretId == "error" {
+		return nil, fmt.Errorf("error 500 creating secret %q", *params.SecretId)
 	}
 
 	if len(params.SecretBinary) != 32 {
 		return nil, fmt.Errorf("bad seed length: %d", len(params.SecretBinary))
 	}
 
-	return &secretsmanager.CreateSecretOutput{ //nolint:exhaustruct
-		ARN:       aws.String(*params.Name + "-123456"),
-		Name:      params.Name,
+	return &secretsmanager.PutSecretValueOutput{
+		ARN:       aws.String(*params.SecretId),
 		VersionId: aws.String("919108f7-52d1-4320-9bac-f847db4148a8"),
 	}, nil
 }
@@ -137,7 +135,7 @@ func TestCreateSeed(t *testing.T) {
 		{
 			name:    "error",
 			id:      "error",
-			wantErr: "creating secret \"error\": error 500 creating secret",
+			wantErr: "putting secret value for \"error\": error 500 creating secret",
 		},
 		{
 			name:    "happy path",
