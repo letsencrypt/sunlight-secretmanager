@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
 type fakeSecretsManager struct{}
@@ -25,9 +26,7 @@ func (sm *fakeSecretsManager) GetSecretValue(_ context.Context, params *secretsm
 	case "missing":
 		return nil, fmt.Errorf("secret %q not found", *params.SecretId)
 	case "empty":
-		return &secretsmanager.GetSecretValueOutput{
-			Name: aws.String("empty"),
-		}, nil
+		return nil, &types.ResourceNotFoundException{Message: aws.String("secret does not exist")}
 	case "real":
 		return &secretsmanager.GetSecretValueOutput{
 			Name:         aws.String("real"),
