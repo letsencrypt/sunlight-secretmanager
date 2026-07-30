@@ -51,12 +51,12 @@ func TestLoadConfig(t *testing.T) {
 			input: "happy.yaml",
 			want: &config{
 				Logs: []logConfig{
-					{
+					{ //nolint:gosec // gosec thinks this is a hardcoded credential
 						ShortName: "shard1",
 						Inception: "2024-08-07",
 						Secret:    "/path/to/shard1.seed",
 					},
-					{
+					{ //nolint:gosec // gosec thinks this is a hardcoded credential
 						ShortName: "shard2",
 						Inception: "2024-08-07",
 						Secret:    "/path/to/shard2.seed",
