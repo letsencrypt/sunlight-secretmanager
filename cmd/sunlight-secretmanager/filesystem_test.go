@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -19,6 +20,13 @@ func TestWriteFile(t *testing.T) {
 	err = f.Close()
 	if err != nil {
 		t.Fatalf("failed to close test setup file: %s", err)
+	}
+
+	// Get the FS type of the tempdir, which may vary between environments
+	var statfs syscall.Statfs_t
+	err = syscall.Statfs(tempDir, &statfs)
+	if err != nil {
+		t.Fatalf("failed to get filesystem info for test temp dir: %s", err)
 	}
 
 	for _, tc := range []struct {
@@ -42,7 +50,7 @@ func TestWriteFile(t *testing.T) {
 		{
 			name:    "happy path",
 			path:    filepath.Join(tempDir, "happy"),
-			fsType:  61267, // The statfs.Type for a normal unix filesystem
+			fsType:  statfs.Type, // Whatever filesystem the test temp dir is on
 			wantErr: "",
 		},
 	} {
