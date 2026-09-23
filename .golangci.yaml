@@ -5,7 +5,9 @@ linters:
     - depguard
     - err113
     - exhaustruct
+    - exhaustruct_v5
     - goconst
+    - gomodguard # deprecated; gomodguard_v2 is enabled instead
     - lll
     - musttag
     - wsl
