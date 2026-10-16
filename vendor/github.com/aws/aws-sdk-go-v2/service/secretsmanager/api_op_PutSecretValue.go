@@ -5,8 +5,9 @@ package secretsmanager
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/schemas"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Creates a new version of your secret by creating a new encrypted value and
@@ -169,6 +170,31 @@ type PutSecretValueInput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *PutSecretValueInput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.PutSecretValueRequest)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *PutSecretValueInput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.ClientRequestToken != nil {
+		s.WriteString(schemas.PutSecretValueRequest_ClientRequestToken, *v.ClientRequestToken)
+	}
+	if v.RotationToken != nil {
+		s.WriteString(schemas.PutSecretValueRequest_RotationToken, *v.RotationToken)
+	}
+	if v.SecretBinary != nil {
+		s.WriteBlob(schemas.PutSecretValueRequest_SecretBinary, v.SecretBinary)
+	}
+	if v.SecretId != nil {
+		s.WriteString(schemas.PutSecretValueRequest_SecretId, *v.SecretId)
+	}
+	if v.SecretString != nil {
+		s.WriteString(schemas.PutSecretValueRequest_SecretString, *v.SecretString)
+	}
+	serializeSecretVersionStagesType(s, schemas.PutSecretValueRequest_VersionStages, v.VersionStages)
+}
+
 type PutSecretValueOutput struct {
 
 	// The ARN of the secret.
@@ -191,22 +217,50 @@ type PutSecretValueOutput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *PutSecretValueOutput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.PutSecretValueResponse)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *PutSecretValueOutput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.ARN != nil {
+		s.WriteString(schemas.PutSecretValueResponse_ARN, *v.ARN)
+	}
+	if v.Name != nil {
+		s.WriteString(schemas.PutSecretValueResponse_Name, *v.Name)
+	}
+	if v.VersionId != nil {
+		s.WriteString(schemas.PutSecretValueResponse_VersionId, *v.VersionId)
+	}
+	serializeSecretVersionStagesType(s, schemas.PutSecretValueResponse_VersionStages, v.VersionStages)
+}
+func (v *PutSecretValueOutput) Deserialize(d smithy.ShapeDeserializer) error {
+	return smithy.ReadStruct(d, schemas.PutSecretValueResponse, func(s *smithy.Schema) error {
+		switch s {
+		case schemas.PutSecretValueResponse_ARN:
+			v.ARN = new(string)
+			return d.ReadString(schemas.PutSecretValueResponse_ARN, v.ARN)
+		case schemas.PutSecretValueResponse_Name:
+			v.Name = new(string)
+			return d.ReadString(schemas.PutSecretValueResponse_Name, v.Name)
+		case schemas.PutSecretValueResponse_VersionId:
+			v.VersionId = new(string)
+			return d.ReadString(schemas.PutSecretValueResponse_VersionId, v.VersionId)
+		case schemas.PutSecretValueResponse_VersionStages:
+			return deserializeSecretVersionStagesType(d, schemas.PutSecretValueResponse_VersionStages, &v.VersionStages)
+		}
+		return nil
+	})
+}
 func (c *Client) addOperationPutSecretValueMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpPutSecretValue{}, middleware.After)
-	if err != nil {
+	if err := stack.Serialize.Add(&serializeRequestMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.PutSecretValue, schemas.PutSecretValueRequest, schemas.PutSecretValueResponse)}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpPutSecretValue{}, middleware.After)
-	if err != nil {
+	if err := stack.Deserialize.Add(&deserializeResponseMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.PutSecretValue, schemas.PutSecretValueRequest, schemas.PutSecretValueResponse), output: &PutSecretValueOutput{}}, middleware.After); err != nil {
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -216,12 +270,6 @@ func (c *Client) addOperationPutSecretValueMiddlewares(stack *middleware.Stack, 
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
@@ -229,9 +277,6 @@ func (c *Client) addOperationPutSecretValueMiddlewares(stack *middleware.Stack, 
 		return err
 	}
 	if err = addOpPutSecretValueValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "PutSecretValue"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
