@@ -4,8 +4,9 @@ package secretsmanager
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/schemas"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Removes the link between the replica secret and the primary secret and promotes
@@ -50,6 +51,18 @@ type StopReplicationToReplicaInput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *StopReplicationToReplicaInput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.StopReplicationToReplicaRequest)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *StopReplicationToReplicaInput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.SecretId != nil {
+		s.WriteString(schemas.StopReplicationToReplicaRequest_SecretId, *v.SecretId)
+	}
+}
+
 type StopReplicationToReplicaOutput struct {
 
 	// The ARN of the promoted secret. The ARN is the same as the original primary
@@ -62,22 +75,35 @@ type StopReplicationToReplicaOutput struct {
 	noSmithyDocumentSerde
 }
 
+func (v *StopReplicationToReplicaOutput) Serialize(s smithy.ShapeSerializer) {
+	s.WriteStruct(schemas.StopReplicationToReplicaResponse)
+	v.SerializeMembers(s)
+	s.CloseStruct()
+}
+
+func (v *StopReplicationToReplicaOutput) SerializeMembers(s smithy.ShapeSerializer) {
+	if v.ARN != nil {
+		s.WriteString(schemas.StopReplicationToReplicaResponse_ARN, *v.ARN)
+	}
+}
+func (v *StopReplicationToReplicaOutput) Deserialize(d smithy.ShapeDeserializer) error {
+	return smithy.ReadStruct(d, schemas.StopReplicationToReplicaResponse, func(s *smithy.Schema) error {
+		switch s {
+		case schemas.StopReplicationToReplicaResponse_ARN:
+			v.ARN = new(string)
+			return d.ReadString(schemas.StopReplicationToReplicaResponse_ARN, v.ARN)
+		}
+		return nil
+	})
+}
 func (c *Client) addOperationStopReplicationToReplicaMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpStopReplicationToReplica{}, middleware.After)
-	if err != nil {
+	if err := stack.Serialize.Add(&serializeRequestMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.StopReplicationToReplica, schemas.StopReplicationToReplicaRequest, schemas.StopReplicationToReplicaResponse)}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpStopReplicationToReplica{}, middleware.After)
-	if err != nil {
+	if err := stack.Deserialize.Add(&deserializeResponseMiddleware{options: &options, operationSchema: smithy.NewOperationSchema(schemas.StopReplicationToReplica, schemas.StopReplicationToReplicaRequest, schemas.StopReplicationToReplicaResponse), output: &StopReplicationToReplicaOutput{}}, middleware.After); err != nil {
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -87,19 +113,10 @@ func (c *Client) addOperationStopReplicationToReplicaMiddlewares(stack *middlewa
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpStopReplicationToReplicaValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "StopReplicationToReplica"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
